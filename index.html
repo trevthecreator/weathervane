@@ -1,4 +1,29 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All-Weather Portfolio Tracker</title>
+  <meta name="description" content="Real-time portfolio watchlist with macro dashboard, Dalio regime analysis, and multi-asset tracking." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #root { width: 100%; min-height: 100vh; background: #080c12; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0b1118; }
+    ::-webkit-scrollbar-thumb { background: #1e2d3d; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2e4560; }
+  </style>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.2/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+
+const { useState, useMemo, useEffect, useCallback } = React;
+
 
 // ── Shared style values ───────────────────────────────────────────────────────
 const S = {
@@ -420,7 +445,7 @@ const BUCKETS = [
   { id: "industrial",  label: "Industrials & Defense",     emoji: "🏭",
     tags: ["Defense & Aerospace","Industrial","Homebuilder"] },
   { id: "reits",       label: "REITs",                     emoji: "🏢",
-    tags: ["Net Lease","Retail REIT","Industrial REIT","Residential REIT","Experiential REIT","Healthcare REIT"] },
+    tags: ["Net Lease","Retail REIT","Industrial REIT","Residential REIT","Experiential REIT"] },
   { id: "global",      label: "Global & Macro",            emoji: "🌍",
     tags: ["International","Small Cap"] },
   { id: "income",      label: "Income & Alternatives",     emoji: "💵",
@@ -431,7 +456,7 @@ const TAG_COLORS = {
   "Tech":"#3b82f6","Energy":"#f97316","Pipelines":"#d97706","Mining & Metals":"#a8a29e",
   "Precious Metals":"#eab308","Streaming & Royalty":"#ca8a04","Uranium":"#84cc16",
   "Copper":"#ea580c","Agriculture":"#16a34a","Water":"#06b6d4","Farmland":"#15803d",
-  "REIT":"#a855f7","Net Lease":"#9333ea","Retail REIT":"#c026d3","Industrial REIT":"#7c3aed","Residential REIT":"#8b5cf6","Experiential REIT":"#a21caf","Healthcare REIT":"#d946ef","Defense & Aerospace":"#ef4444","Industrial":"#64748b",
+  "REIT":"#a855f7","Net Lease":"#9333ea","Retail REIT":"#c026d3","Industrial REIT":"#7c3aed","Residential REIT":"#8b5cf6","Experiential REIT":"#a21caf","Defense & Aerospace":"#ef4444","Industrial":"#64748b",
   "Financials":"#2563eb","Insurance":"#1d4ed8","Healthcare":"#ec4899",
   "Consumer Staples":"#0d9488","International":"#6366f1","Energy Transition":"#65a30d",
   "Homebuilder":"#b45309","Land & Royalty":"#d97706","Fixed Income":"#475569",
@@ -497,7 +522,6 @@ const THESIS = {
   "NTR":   {t:"Potash oligopoly; Russia/Belarus sanctions = structural supply constraint.",      e:[48,58],    a:"B"},
   "NVDA":  {t:"AI compute monopoly — data center GPU dominance; valuation demanding.",          e:[95,125],   a:"R"},
   "O":     {t:"Monthly dividend aristocrat — 30yr track record, global net lease.",             e:[52,62],    a:"B"},
-  "OHI":   {t:"Healthcare REIT — SNF/senior housing; high yield, watch coverage ratios.",       e:[32,38],    a:"B"},
   "OKE":   {t:"ONEOK/Magellan merger creates fee-based midstream giant.",                       e:[70,82],    a:"B"},
   "PFE":   {t:"Post-COVID trough valuation; pipeline optionality + Seagen oncology.",          e:[22,27],    a:"B"},
   "PG":    {t:"Consumer staples compounder; pricing power proven through inflation cycle.",     e:[150,170],  a:"B"},
@@ -582,7 +606,7 @@ const STOCKS = [
  { ticker:"NNN", name:"NNN REIT Inc", tags:["Net Lease"] },
  { ticker:"NTR", name:"Nutrien Ltd", tags:["Agriculture"] },
  { ticker:"O", name:"Realty Income Corp", tags:["Net Lease"] },
- { ticker:"OHI", name:"Omega Healthcare", tags:["Healthcare REIT"] },
+
  { ticker:"OKE", name:"ONEOK Inc", tags:["Energy","Pipelines"] },
  { ticker:"PFE", name:"Pfizer Inc", tags:["Healthcare"] },
  { ticker:"PG", name:"Procter & Gamble", tags:["Consumer Staples"] },
@@ -617,10 +641,10 @@ function exportCSV(stocks) {
       s.ticker,
       `"${s.name}"`,
       `"${s.tags.join(", ")}"`,
-      `"${(t.thesis || "").replace(/"/g, "'")}"`,
-      getEn(_th) ? t.entry[0] : "",
-      getEn(_th) ? t.entry[1] : "",
-      t.acct ? ACCT[t.acct] : "",
+      `"${(t.t || "").replace(/"/g, "'")}"`,
+      t.e ? t.e[0] : "",
+      t.e ? t.e[1] : "",
+      t.a ? ACCT[t.a] : "",
     ]);
   });
   const csv = rows.map(r => r.join(",")).join("\n");
@@ -658,7 +682,7 @@ function Spark({ points, pct }) {
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
-export default function StockTracker() {
+function StockTracker() {
   const [activeFilters, setActiveFilters] = useState(new Set());
   const [openBuckets,   setOpenBuckets]   = useState(new Set(BUCKETS.map(b => b.id)));
   const [search,        setSearch]        = useState("");
@@ -1035,3 +1059,9 @@ export default function StockTracker() {
     </div>
   );
 }
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<StockTracker />);
+  </script>
+</body>
+</html>
