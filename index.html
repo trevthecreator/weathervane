@@ -111,6 +111,7 @@ async function fetch5Y(ticker) {
 async function fetchQuoteDataSingle(ticker) {
   if (ticker === "BTC" || ticker === "ETH") return null;
   var sym = ticker === "BRK/B" ? "BRK.B" : ticker;
+  var yfSym = ticker === "BRK/B" ? "BRK-B" : ticker;
   try {
     var mUrl = "/api/proxy?url=" + encodeURIComponent(
       "https://finnhub.io/api/v1/stock/metric?symbol=" + sym + "&metric=all&token=" + FINNHUB_KEY
@@ -118,16 +119,22 @@ async function fetchQuoteDataSingle(ticker) {
     var mResp = await fetch(mUrl);
     var mData = await mResp.json();
     var m = mData && mData.metric ? mData.metric : {};
-    if (["AAPL","MSFT","NVDA"].indexOf(ticker)>=0) console.log("[FH] "+ticker+" metric keys:"+Object.keys(m).length+" pe:"+m.peBasicExclExtraTTM+" status:"+mResp.status);
 
-    var tUrl = "/api/proxy?url=" + encodeURIComponent(
-      "https://finnhub.io/api/v1/stock/price-target?symbol=" + sym + "&token=" + FINNHUB_KEY
-    );
-    var tResp = await fetch(tUrl);
-    var tRaw = await tResp.text();
-    var t; try { t = JSON.parse(tRaw); } catch(e) { t = {}; }
-    if (["AAPL","MSFT","NVDA"].indexOf(ticker)>=0) console.log("[FH] "+ticker+" target raw:"+tRaw.substring(0,200)+" status:"+tResp.status);
-    if (t && t.error) t = {};
+    var t = {};
+    try {
+      var tUrl = "/api/proxy?url=" + encodeURIComponent(
+        "https://query1.finance.yahoo.com/v11/finance/quoteSummary/" + yfSym + "?modules=financialData"
+      );
+      var tResp = await fetch(tUrl);
+      var tData = await tResp.json();
+      var fd = tData && tData.quoteSummary && tData.quoteSummary.result && tData.quoteSummary.result[0] && tData.quoteSummary.result[0].financialData;
+      if (fd) {
+        t.targetMean = fd.targetMeanPrice && fd.targetMeanPrice.raw ? fd.targetMeanPrice.raw : null;
+        t.targetHigh = fd.targetHighPrice && fd.targetHighPrice.raw ? fd.targetHighPrice.raw : null;
+        t.targetLow  = fd.targetLowPrice && fd.targetLowPrice.raw ? fd.targetLowPrice.raw : null;
+        t.analystCount = fd.numberOfAnalystOpinions && fd.numberOfAnalystOpinions.raw ? fd.numberOfAnalystOpinions.raw : null;
+      }
+    } catch(e) {}
 
     var pe = m.peBasicExclExtraTTM || m.peTTM || null;
     var fpe = m.peExclExtraAnnual || null;
@@ -143,7 +150,7 @@ async function fetchQuoteDataSingle(ticker) {
       targetMean:  t.targetMean || null,
       targetHigh:  t.targetHigh || null,
       targetLow:   t.targetLow || null,
-      analystCount:t.targetMean ? 1 : null,
+      analystCount:t.analystCount || null,
     };
   } catch(e) { return null; }
 }
@@ -224,6 +231,25 @@ async function fetchYieldCurve() {
   await Promise.all(Object.entries(SERIES).map(async ([label,id])=>{
     const v=await fredSeries(id,3);
     results[label]={ cur:v[0]??null, prev:v[1]??null };
+  }));
+  return results;
+}
+
+// ── Yahoo: real-time yield overlay (3M, 5Y, 10Y, 30Y) ───────────────────────
+var YIELD_TICKERS = {"3M":"^IRX","5Y":"^FVX","10Y":"^TNX","30Y":"^TYX"};
+async function fetchRealtimeYields() {
+  var results = {};
+  await Promise.all(Object.keys(YIELD_TICKERS).map(function(label) {
+    var sym = YIELD_TICKERS[label];
+    var url = "/api/proxy?url=" + encodeURIComponent(
+      "https://query1.finance.yahoo.com/v8/finance/chart/" + sym + "?interval=1d&range=1d"
+    );
+    return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+      var meta = d && d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta;
+      if (meta && meta.regularMarketPrice != null) {
+        results[label] = meta.regularMarketPrice / 10;
+      }
+    }).catch(function() {});
   }));
   return results;
 }
