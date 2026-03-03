@@ -45,54 +45,60 @@ const S = {
 };
 
 
-const FINNHUB_KEY = "d6jc641r01ql467j68s0d6jc641r01ql467j68sg";
+const FINNHUB_KEY = "d6jc641r01ql467j68s0d6jc641r01ql467j68sg"; // used for real-time WebSocket
 const FRED_KEY    = "840b9d1b2587c5643366af907cd16ec3";
 
 // Symbol maps
-const FH = (t) => ({ "BRK/B":"BRK.B","BTC":"BINANCE:BTCUSDT","ETH":"BINANCE:ETHUSDT" })[t] || t;
-const isCrypto = (t) => t === "BTC" || t === "ETH";
+const YF_SYM = (t) => ({"BRK/B":"BRK-B","BTC":"BTC-USD","ETH":"ETH-USD"})[t] || t;
 
-// ── Finnhub: daily candles — free tier supports resolution=D ─────────────────
-// One call per ticker. 1 year of daily data covers all metrics.
-// 5Y sparkline uses sampled 1Y data (best available on free tier).
+// Finnhub WebSocket symbol maps
+const FH_SYM = (t) => ({"BRK/B":"BRK.B","BTC":"BINANCE:BTCUSDT","ETH":"BINANCE:ETHUSDT"})[t] || t;
+const FH_REVERSE = {}; // finnhub symbol → our ticker, populated after STOCKS defined
+
+// ── Yahoo Finance: all price data in one call per ticker ─────────────────────
+// No API key, no rate limit issues, returns 1Y daily data
 async function fetchTicker(ticker) {
   try {
-    const sym=FH(ticker);
-    const to=Math.floor(Date.now()/1000);
-    const from1y=to-Math.round(1.05*365*86400);
-    const ep=isCrypto(ticker)?"crypto":"stock";
-    const url=`https://finnhub.io/api/v1/${ep}/candle?symbol=${sym}&resolution=D&from=${from1y}&to=${to}&token=${FINNHUB_KEY}`;
-    const d=await (await fetch(url)).json();
-    if (d.s!=="ok"||!d.c?.length) return null;
-    const closes=d.c, stamps=d.t, n=closes.length;
-    const price=closes[n-1], prev=closes[n-2];
-    const now=Date.now()/1000;
-    const find=(cutoff)=>{ let i=stamps.findIndex(t=>t>=cutoff); return i<0?0:i; };
-    const pct=(i)=>closes[i]?((price-closes[i])/closes[i])*100:null;
-    // Sparkline from full year of daily data (~250 points → downsample to 80)
-    const step=Math.max(1,Math.floor(n/80));
-    const sparkRaw=[];
-    for(let i=0;i<n;i+=step) sparkRaw.push(closes[i]);
+    const sym = YF_SYM(ticker);
+    const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1y`
+    );
+    const d = await (await fetch(url)).json();
+    const result = d?.chart?.result?.[0];
+    if (!result) return null;
+    const closes = result.indicators?.quote?.[0]?.close;
+    const stamps = result.timestamp;
+    if (!closes?.length || !stamps?.length) return null;
+    // Filter out nulls but keep indices aligned
+    const valid = closes.map((c,i) => c != null ? {c, t:stamps[i]} : null).filter(Boolean);
+    if (valid.length < 2) return null;
+    const n = valid.length;
+    const price = valid[n-1].c, prev = valid[n-2].c;
+    const now = Date.now()/1000;
+    const find = (cutoff) => { let i = valid.findIndex(v => v.t >= cutoff); return i < 0 ? 0 : i; };
+    const pct = (i) => valid[i]?.c ? ((price - valid[i].c) / valid[i].c) * 100 : null;
+    // Sparkline: downsample to ~80 points
+    const step = Math.max(1, Math.floor(n/80));
+    const sparkRaw = [];
+    for (let i = 0; i < n; i += step) sparkRaw.push(valid[i].c);
     sparkRaw.push(price);
-    const sMin=Math.min(...sparkRaw), sMax=Math.max(...sparkRaw);
-    const spark=sMax>sMin?sparkRaw.map(v=>(v-sMin)/(sMax-sMin)):sparkRaw.map(()=>0.5);
+    const sMin = Math.min(...sparkRaw), sMax = Math.max(...sparkRaw);
+    const spark = sMax > sMin ? sparkRaw.map(v => (v-sMin)/(sMax-sMin)) : sparkRaw.map(() => 0.5);
     return {
       price, spark,
-      dailyPct: prev?((price-prev)/prev)*100:null,
+      dailyPct: prev ? ((price-prev)/prev)*100 : null,
       ytdPct:   pct(find(new Date(new Date().getFullYear(),0,1).getTime()/1000)),
-      sixMoPct: pct(find(now-180*86400)),
-      oneyPct:  pct(find(now-365*86400)),
-      fiveyPct: null, // 5Y needs premium tier — shown as — for now
+      sixMoPct: pct(find(now - 180*86400)),
+      oneyPct:  pct(find(now - 365*86400)),
+      fiveyPct: null, // filled by fetch5Y
     };
-  } catch(e) { console.error("fetchTicker",ticker,e?.message||e); return null; }
+  } catch(e) { console.error("fetchTicker", ticker, e?.message||e); return null; }
 }
 
-
-// ── Yahoo Finance: 5Y return only (free, supplements Finnhub) ────────────────
-const YF_SYM = (t) => ({"BRK/B":"BRK-B","BTC":"BTC-USD","ETH":"ETH-USD"})[t] || t;
+// ── Yahoo Finance: 5Y return (monthly data) ──────────────────────────────────
 async function fetch5Y(ticker) {
   try {
-    const url = "https://corsproxy.io/?url=" + encodeURIComponent(
+    const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(
       `https://query1.finance.yahoo.com/v8/finance/chart/${YF_SYM(ticker)}?interval=1mo&range=5y`
     );
     const d = await (await fetch(url)).json();
@@ -106,7 +112,7 @@ async function fetch5Y(ticker) {
 // ── FRED: generic series fetch (desc, most recent first) ──────────────────────
 async function fredSeries(id, limit=5) {
   try {
-    const url="https://corsproxy.io/?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=${limit}&file_type=json`);
+    const url="https://api.allorigins.win/raw?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=${limit}&file_type=json`);
     const d=await (await fetch(url)).json();
     return (d.observations||[]).filter(o=>o.value!==".").map(o=>parseFloat(o.value));
   } catch { return []; }
@@ -629,6 +635,9 @@ const STOCKS = [
  { ticker:"XYL", name:"Xylem Inc", tags:["Water","Industrial"] },
 ];
 
+// Populate Finnhub reverse symbol lookup
+STOCKS.forEach(s => { FH_REVERSE[FH_SYM(s.ticker)] = s.ticker; });
+
 
 // ── CSV export ───────────────────────────────────────────────────────────────
 function exportCSV(stocks) {
@@ -693,7 +702,9 @@ function StockTracker() {
   const [loading,       setLoading]       = useState(false);
   const [progress,      setProgress]      = useState(0);
   const [lastUpdated,   setLastUpdated]   = useState(null);
-  const [apiStatus,     setApiStatus]     = useState(null); // {finnhub:"ok"|"err:...", fred:"ok"|"err:..."}
+  const [apiStatus,     setApiStatus]     = useState(null); // {yahoo:"ok"|"err:...", fred:"ok"|"err:..."}
+  const [livePrice,     setLivePrice]     = useState({});   // {ticker: {price, time}}
+  const [wsStatus,      setWsStatus]      = useState("off"); // off|connecting|live|error
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -729,22 +740,79 @@ function StockTracker() {
     }
     // ── API diagnostic: test one call from each API ──
     (async () => {
-      const status = { finnhub: "testing…", fred: "testing…" };
+      const status = { yahoo: "testing…", fred: "testing…" };
       setApiStatus({...status});
       try {
-        const fhUrl = `https://finnhub.io/api/v1/stock/candle?symbol=AAPL&resolution=D&from=${Math.floor(Date.now()/1000)-86400*7}&to=${Math.floor(Date.now()/1000)}&token=${FINNHUB_KEY}`;
-        const fhRes = await fetch(fhUrl);
-        const fhData = await fhRes.json();
-        status.finnhub = fhRes.ok && fhData.s === "ok" ? "ok" : `err: ${fhRes.status} ${JSON.stringify(fhData).slice(0,80)}`;
-      } catch(e) { status.finnhub = `err: ${e.message}`; }
+        const yfUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=5d");
+        const yfRes = await fetch(yfUrl);
+        const yfData = await yfRes.json();
+        status.yahoo = yfRes.ok && yfData?.chart?.result?.[0] ? "ok" : `err: ${yfRes.status} ${JSON.stringify(yfData).slice(0,80)}`;
+      } catch(e) { status.yahoo = `err: ${e.message}`; }
       try {
-        const frUrl = "https://corsproxy.io/?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${FRED_KEY}&sort_order=desc&limit=1&file_type=json`);
+        const frUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${FRED_KEY}&sort_order=desc&limit=1&file_type=json`);
         const frRes = await fetch(frUrl);
         const frData = await frRes.json();
         status.fred = frRes.ok && frData.observations?.length ? "ok" : `err: ${frRes.status} ${JSON.stringify(frData).slice(0,80)}`;
       } catch(e) { status.fred = `err: ${e.message}`; }
       setApiStatus(status);
     })();
+  }, []);
+
+  // ── Finnhub WebSocket: real-time price stream ──────────────────────────────
+  useEffect(() => {
+    let ws = null;
+    let reconnectTimer = null;
+    const liveBuf = {}; // buffer to batch state updates
+
+    function connect() {
+      setWsStatus("connecting");
+      ws = new WebSocket(`wss://ws.finnhub.io?token=${FINNHUB_KEY}`);
+
+      ws.onopen = () => {
+        setWsStatus("live");
+        // Subscribe to all tickers
+        STOCKS.forEach(s => {
+          ws.send(JSON.stringify({ type: "subscribe", symbol: FH_SYM(s.ticker) }));
+        });
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type !== "trade" || !msg.data?.length) return;
+          // Process trades — take latest price per symbol
+          msg.data.forEach(trade => {
+            const ticker = FH_REVERSE[trade.s];
+            if (ticker) {
+              liveBuf[ticker] = { price: trade.p, time: trade.t };
+            }
+          });
+        } catch {}
+      };
+
+      ws.onerror = () => setWsStatus("error");
+      ws.onclose = () => {
+        setWsStatus("off");
+        // Reconnect after 5s
+        reconnectTimer = setTimeout(connect, 5000);
+      };
+    }
+
+    connect();
+
+    // Flush live buffer to state every 2 seconds (avoids thrashing on fast streams)
+    const flushInterval = setInterval(() => {
+      const keys = Object.keys(liveBuf);
+      if (keys.length > 0) {
+        setLivePrice(prev => ({ ...prev, ...liveBuf }));
+      }
+    }, 2000);
+
+    return () => {
+      if (ws) { ws.onclose = null; ws.close(); }
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      clearInterval(flushInterval);
+    };
   }, []);
 
   const loadAll = useCallback(async () => {
@@ -754,11 +822,9 @@ function StockTracker() {
     let freshYields = null, freshMacro = null;
     fetchYieldCurve().then(v => { if (v) { setYields(v); freshYields = v; } }).catch(()=>{});
     fetchMacroData().then(v  => { if (v) { setMacro(v);  freshMacro  = v; } }).catch(()=>{});
-    // Finnhub: 60 calls/min limit
-    // Aggressive: fire 55 immediately, pause 61s, fire remaining 20
-    // 73% of tickers appear in ~2-3s, rest at ~63s. Total ~63s vs old ~80s
+    // Yahoo Finance: no strict rate limit — fire in batches of 20 with short pauses
     const tickers = STOCKS.map(s => s.ticker);
-    const BATCH=58, DELAY=61000;
+    const BATCH=20, DELAY=2000;
     const all={};
     for (let i=0; i<tickers.length; i+=BATCH) {
       await Promise.allSettled(tickers.slice(i,i+BATCH).map(async t => {
@@ -842,7 +908,12 @@ function StockTracker() {
           <h1 style={{ fontSize:"22px", fontWeight:700, color:S.acc, margin:0, letterSpacing:"0.04em", fontFamily:S.sans }}>
             WEATHERVANE
           </h1>
-          <p style={{ fontSize:"11px", color:S.dim, margin:"5px 0 0" }}>All-Weather Portfolio Watchlist</p>
+          <p style={{ fontSize:"11px", color:S.dim, margin:"5px 0 0" }}>
+            All-Weather Portfolio Watchlist
+            <span style={{ marginLeft:"10px", fontSize:"9px", color: wsStatus==="live" ? S.grn : wsStatus==="connecting" ? "#f59e0b" : wsStatus==="error" ? S.red : S.dim2 }}>
+              {wsStatus==="live" ? "● LIVE" : wsStatus==="connecting" ? "● CONNECTING" : wsStatus==="error" ? "● WS ERROR" : "● DELAYED"}
+            </span>
+          </p>
         </div>
         <div style={{ textAlign:"right" }}>
           <span style={{ fontSize:"20px", fontWeight:700, color:"#94a3b8", display:"block", fontFamily:S.mono }}>{STOCKS.length}</span>
@@ -851,14 +922,17 @@ function StockTracker() {
       </div>
 
       {/* ── API Status Banner (auto-hides when both OK) ── */}
-      {apiStatus && (apiStatus.finnhub !== "ok" || apiStatus.fred !== "ok") && (
+      {apiStatus && (apiStatus.yahoo !== "ok" || apiStatus.fred !== "ok") && (
         <div style={{ background:"#1a0a0a", border:"1px solid #4a2020", padding:"12px 16px", marginBottom:"20px", fontSize:"11px", fontFamily:S.mono, lineHeight:1.8 }}>
           <div style={{ color:"#f87171", fontWeight:600, marginBottom:"6px", fontFamily:S.sans, fontSize:"12px" }}>API DIAGNOSTICS</div>
-          <div style={{ color: apiStatus.finnhub === "ok" ? S.grn : apiStatus.finnhub?.startsWith("err") ? "#f87171" : S.dim }}>
-            Finnhub: {apiStatus.finnhub}
+          <div style={{ color: apiStatus.yahoo === "ok" ? S.grn : apiStatus.yahoo?.startsWith("err") ? "#f87171" : S.dim }}>
+            Yahoo Finance (historical): {apiStatus.yahoo}
           </div>
           <div style={{ color: apiStatus.fred === "ok" ? S.grn : apiStatus.fred?.startsWith("err") ? "#f87171" : S.dim }}>
-            FRED: {apiStatus.fred}
+            FRED (macro): {apiStatus.fred}
+          </div>
+          <div style={{ color: wsStatus === "live" ? S.grn : wsStatus === "error" ? "#f87171" : S.dim }}>
+            Finnhub WS (live prices): {wsStatus} {wsStatus==="live" ? `— ${Object.keys(livePrice).length} streaming` : ""}
           </div>
         </div>
       )}
@@ -1026,13 +1100,25 @@ function StockTracker() {
                   {/* Price + return columns */}
                   {["price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"].map(field => {
                     const pd = priceData[stock.ticker];
-                    const val = pd?.[field];
+                    const live = livePrice[stock.ticker];
+                    // Use live price for current price and daily change
+                    let val = pd?.[field];
+                    let isLive = false;
+                    if (field === "price" && live?.price) { val = live.price; isLive = true; }
+                    if (field === "dailyPct" && live?.price && pd?.price) {
+                      // Recalc daily change: live price vs Yahoo's previous close
+                      const prevClose = pd.price / (1 + (pd.dailyPct||0)/100);
+                      val = ((live.price - prevClose) / prevClose) * 100;
+                    }
                     const isPrice = field === "price";
                     return (
                       <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.mono, fontSize:"12px", color: isPrice ? "#cbd5e1" : pctColor(val) }}>
                         {pd === undefined ? <span style={{color:S.dim2,fontSize:"10px"}}>…</span>
                           : val === null || val === undefined ? "—"
-                          : isPrice ? (val < 1 ? val.toFixed(4) : val < 100 ? val.toFixed(2) : val.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}))
+                          : isPrice ? (<>
+                              {val < 1 ? val.toFixed(4) : val < 100 ? val.toFixed(2) : val.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}
+                              {isLive && <span style={{display:"inline-block",width:5,height:5,borderRadius:"50%",background:S.grn,marginLeft:5,verticalAlign:"middle"}} title="Live" />}
+                            </>)
                           : pctFmt(val)
                         }
                       </td>
