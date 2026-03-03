@@ -120,23 +120,7 @@ async function fetchQuoteDataSingle(ticker) {
     var mData = await mResp.json();
     var m = mData && mData.metric ? mData.metric : {};
 
-    var t = {};
-    try {
-      var tUrl = "/api/proxy?url=" + encodeURIComponent(
-        "https://query1.finance.yahoo.com/v11/finance/quoteSummary/" + yfSym + "?modules=financialData"
-      );
-      var tResp = await fetch(tUrl);
-      var tRaw = await tResp.text();
-      if (["AAPL","MSFT","NVDA"].indexOf(ticker)>=0) console.log("[YF-TARGET] "+ticker+" status:"+tResp.status+" raw:"+tRaw.substring(0,300));
-      var tData; try { tData = JSON.parse(tRaw); } catch(e) { tData = null; }
-      var fd = tData && tData.quoteSummary && tData.quoteSummary.result && tData.quoteSummary.result[0] && tData.quoteSummary.result[0].financialData;
-      if (fd) {
-        t.targetMean = fd.targetMeanPrice && fd.targetMeanPrice.raw ? fd.targetMeanPrice.raw : null;
-        t.targetHigh = fd.targetHighPrice && fd.targetHighPrice.raw ? fd.targetHighPrice.raw : null;
-        t.targetLow  = fd.targetLowPrice && fd.targetLowPrice.raw ? fd.targetLowPrice.raw : null;
-        t.analystCount = fd.numberOfAnalystOpinions && fd.numberOfAnalystOpinions.raw ? fd.numberOfAnalystOpinions.raw : null;
-      }
-    } catch(e) {}
+    var t = {}; // Target data unavailable on free APIs
 
     var pe = m.peBasicExclExtraTTM || m.peTTM || null;
     var fpe = m.peExclExtraAnnual || null;
@@ -159,7 +143,7 @@ async function fetchQuoteDataSingle(ticker) {
 
 async function fetchQuoteData(tickers, onProgress) {
   var results = {};
-  var BATCH = 3, DELAY = 7000;
+  var BATCH = 5, DELAY = 6000;
   for (var i = 0; i < tickers.length; i += BATCH) {
     await Promise.allSettled(tickers.slice(i, i + BATCH).map(function(t) {
       return fetchQuoteDataSingle(t).then(function(r) { if (r) results[t] = r; });
@@ -351,9 +335,7 @@ function YieldCurve({ yields }) {
         </div>
         {s2s10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>2s/10s: <span style={{color:s2s10<0?"#ef4444":"#94a3b8"}}>{s2s10>=0?"+":""}{s2s10.toFixed(2)}%</span></div>}
         {s3m10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>3m/10y: <span style={{color:s3m10<0?"#ef4444":"#94a3b8"}}>{s3m10>=0?"+":""}{s3m10.toFixed(2)}%</span></div>}
-        <div style={{fontSize:"8px",color:"#4a6278",fontFamily:S.sans,marginTop:"4px",cursor:"help"}} title={"Green dots (3M, 5Y, 10Y, 30Y) update real-time via Yahoo Finance.\nBlue dots (1Y, 2Y, 3Y, 7Y) update daily ~6PM ET via FRED."}>
-          <span style={{color:"#22c55e"}}>{"●"}</span> Real-time{"  "}<span style={{color:"#38bdf8"}}>{"●"}</span> Daily ~6PM ET
-        </div>
+
       </div>
     </div>
   );
@@ -871,7 +853,7 @@ function StockTracker() {
   const [sortDir,       setSortDir]       = useState(1);
   const [expandedRow,   setExpandedRow]   = useState(null);
   const [inSeasonOnly,  setInSeasonOnly]  = useState(false);
-  const [visibleCols,   setVisibleCols]   = useState(new Set(["ticker","name","price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","divYield","trailingPE","fwdPE","target","upside","spark","tags","acct"]));
+  const [visibleCols,   setVisibleCols]   = useState(new Set(["ticker","name","price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","divYield","trailingPE","fwdPE","spark","tags","acct"]));
   const [returnsPref, setReturnsPref] = useState(new Set(["dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"]));
   const [valPref, setValPref] = useState(new Set(["trailingPE","fwdPE","target","upside"]));
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -1028,14 +1010,14 @@ function StockTracker() {
       saveCache(all, freshYields, freshMacro);
     });
     // Dividend yields via Yahoo quote endpoint
-    fetchQuoteData(tickers, (partial) => setQuoteData(partial)).then(qd => { if (qd) setQuoteData(qd); }).catch(()=>{});
+    fetchQuoteData(tickers, function(partial) { setQuoteData(function(prev) { return Object.assign({}, prev, partial); }); }).then(function(qd) { if (qd) setQuoteData(function(prev) { return Object.assign({}, prev, qd); }); }).catch(function(){});
     setLastUpdated(new Date());
     setLoading(false);
   }, []);
 
   useEffect(() => {
     loadAll();
-    const interval = setInterval(loadAll, 5 * 60 * 1000); // refresh every 5 min
+    const interval = setInterval(loadAll, 10 * 60 * 1000); // refresh every 10 min
     return () => clearInterval(interval);
   }, []);
 
