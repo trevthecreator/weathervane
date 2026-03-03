@@ -60,7 +60,7 @@ const FH_REVERSE = {}; // finnhub symbol → our ticker, populated after STOCKS 
 async function fetchTicker(ticker) {
   try {
     const sym = YF_SYM(ticker);
-    const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(
+    const url = "/api/proxy?url=" + encodeURIComponent(
       `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1y`
     );
     const d = await (await fetch(url)).json();
@@ -98,7 +98,7 @@ async function fetchTicker(ticker) {
 // ── Yahoo Finance: 5Y return (monthly data) ──────────────────────────────────
 async function fetch5Y(ticker) {
   try {
-    const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(
+    const url = "/api/proxy?url=" + encodeURIComponent(
       `https://query1.finance.yahoo.com/v8/finance/chart/${YF_SYM(ticker)}?interval=1mo&range=5y`
     );
     const d = await (await fetch(url)).json();
@@ -112,7 +112,7 @@ async function fetch5Y(ticker) {
 // ── FRED: generic series fetch (desc, most recent first) ──────────────────────
 async function fredSeries(id, limit=5) {
   try {
-    const url="https://api.allorigins.win/raw?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=${limit}&file_type=json`);
+    const url="/api/proxy?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=${limit}&file_type=json`);
     const d=await (await fetch(url)).json();
     return (d.observations||[]).filter(o=>o.value!==".").map(o=>parseFloat(o.value));
   } catch { return []; }
@@ -743,13 +743,13 @@ function StockTracker() {
       const status = { yahoo: "testing…", fred: "testing…" };
       setApiStatus({...status});
       try {
-        const yfUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=5d");
+        const yfUrl = "/api/proxy?url=" + encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=5d");
         const yfRes = await fetch(yfUrl);
         const yfData = await yfRes.json();
         status.yahoo = yfRes.ok && yfData?.chart?.result?.[0] ? "ok" : `err: ${yfRes.status} ${JSON.stringify(yfData).slice(0,80)}`;
       } catch(e) { status.yahoo = `err: ${e.message}`; }
       try {
-        const frUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${FRED_KEY}&sort_order=desc&limit=1&file_type=json`);
+        const frUrl = "/api/proxy?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${FRED_KEY}&sort_order=desc&limit=1&file_type=json`);
         const frRes = await fetch(frUrl);
         const frData = await frRes.json();
         status.fred = frRes.ok && frData.observations?.length ? "ok" : `err: ${frRes.status} ${JSON.stringify(frData).slice(0,80)}`;
