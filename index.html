@@ -45,8 +45,8 @@ const S = {
 };
 
 
-const FINNHUB_KEY = "d6ittn9r01qleu95i6tgd6ittn9r01qleu95i6u0";
-const FRED_KEY    = "d89c1f35b1f2338af784ee9599731d52";
+const FINNHUB_KEY = "d6jbi09r01ql467j3kngd6jbi09r01ql467j3ko0";
+const FRED_KEY    = "840b9d1b2587c5643366af907cd16ec3";
 
 // Symbol maps
 const FH = (t) => ({ "BRK/B":"BRK.B","BTC":"BINANCE:BTCUSDT","ETH":"BINANCE:ETHUSDT" })[t] || t;
@@ -342,7 +342,7 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
         <Divider/>
         <div style={gap}/>
         <MacroTile
-          label="BUFFETT INDICATOR (WILL5000/GDP)"
+          label="BUFFETT INDICATOR (WILL5000/US GDP)"
           value={m.buffett!=null ? m.buffett.toFixed(0)+"%" : null}
           sub={buffPctChg!=null ? `${buffPctChg>=0?"+":""}${buffPctChg.toFixed(1)}pp prev` : ">140% = expensive"}
           color={buffColor}
@@ -528,7 +528,6 @@ const THESIS = {
   "QCOM":  {t:"Semiconductor diversification beyond mobile; auto/IoT revenue mix shift.",       e:[120,145],  a:"R"},
   "REXR":  {t:"Southern CA industrial REIT; irreplaceable infill locations, e-commerce.",       e:[30,38],    a:"B"},
   "RTX":   {t:"Defense + commercial aerospace; Pratt aftermarket + missile systems demand.",    e:[115,135],  a:"B"},
-  "SGOV":  {t:"Ultra-short Treasury buffer — earns yield while waiting for deployment.",        e:[100,100],  a:"B"},
   "SPG":   {t:"Dominant mall REIT; premium centers resilient, international growth.",           e:[155,180],  a:"B"},
   "STAG":  {t:"Industrial/logistics REIT — monthly dividend, e-commerce demand.",               e:[33,38],    a:"B"},
   "TGT":   {t:"Retail at trough; inventory cycle normalizing, loyal customer base.",            e:[95,115],   a:"B"},
@@ -613,7 +612,6 @@ const STOCKS = [
  { ticker:"QCOM", name:"Qualcomm Inc", tags:["Tech"] },
  { ticker:"REXR", name:"Rexford Industrial", tags:["Industrial REIT"] },
  { ticker:"RTX", name:"RTX Corp", tags:["Defense & Aerospace","Industrial"] },
- { ticker:"SGOV", name:"iShares 0-3M Treasury Bond", tags:["ETF","Fixed Income"] },
  { ticker:"SPG", name:"Simon Property Group", tags:["Retail REIT"] },
  { ticker:"STAG", name:"STAG Industrial", tags:["Industrial REIT"] },
  { ticker:"TGT", name:"Target Corp", tags:["Consumer Staples"] },
@@ -703,30 +701,63 @@ function StockTracker() {
     document.head.appendChild(link);
   }, []);
 
+  // ── Cache helpers ──────────────────────────────────────────────────────────
+  const CACHE_KEY = "awpt_cache_v1";
+  const saveCache = (prices, yld, mac) => {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), prices, yields: yld, macro: mac })); } catch {}
+  };
+  const loadCache = () => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const c = JSON.parse(raw);
+      // Cache valid for 24 hours
+      if (Date.now() - c.ts > 24 * 60 * 60 * 1000) return null;
+      return c;
+    } catch { return null; }
+  };
+
+  // ── Restore cache instantly on mount ─────────────────────────────────────
+  useEffect(() => {
+    const c = loadCache();
+    if (c) {
+      if (c.prices) { setPriceData(c.prices); setProgress(STOCKS.length); }
+      if (c.yields) setYields(c.yields);
+      if (c.macro)  setMacro(c.macro);
+      if (c.ts)     setLastUpdated(new Date(c.ts));
+    }
+  }, []);
+
   const loadAll = useCallback(async () => {
     setLoading(true);
-    setProgress(0);
+    setProgress(prev => prev || 0);
     // FRED fires independently — different API, no Finnhub rate impact
-    fetchYieldCurve().then(v => { if (v) setYields(v); }).catch(()=>{});
-    fetchMacroData().then(v  => { if (v) setMacro(v);  }).catch(()=>{});
-    // Finnhub: 1 call/ticker (candles only) = 83 calls total
-    // 60/min limit → BATCH=15 (15 calls/batch), DELAY=15s → ~6 batches ≈ 75s
+    let freshYields = null, freshMacro = null;
+    fetchYieldCurve().then(v => { if (v) { setYields(v); freshYields = v; } }).catch(()=>{});
+    fetchMacroData().then(v  => { if (v) { setMacro(v);  freshMacro  = v; } }).catch(()=>{});
+    // Finnhub: 60 calls/min limit
+    // Aggressive: fire 55 immediately, pause 61s, fire remaining 20
+    // 73% of tickers appear in ~2-3s, rest at ~63s. Total ~63s vs old ~80s
     const tickers = STOCKS.map(s => s.ticker);
-    const BATCH=12, DELAY=13000;
+    const BATCH=58, DELAY=61000;
     const all={};
     for (let i=0; i<tickers.length; i+=BATCH) {
       await Promise.allSettled(tickers.slice(i,i+BATCH).map(async t => {
         try { const r=await fetchTicker(t); if (r) all[t]=r; } catch {}
       }));
-      setPriceData({...all});
+      setPriceData(prev => ({...prev, ...all}));
       setProgress(Math.min(i+BATCH, tickers.length));
       if (i+BATCH < tickers.length) await new Promise(r => setTimeout(r, DELAY));
     }
-    // 5Y returns via Yahoo Finance (monthly, free, runs in parallel after main load)
+    // 5Y returns via Yahoo Finance (runs in parallel after main load)
     Promise.allSettled(Object.keys(all).map(async t => {
       const pct = await fetch5Y(t);
       if (pct!=null) all[t] = {...all[t], fiveyPct:pct};
-    })).then(() => setPriceData({...all}));
+    })).then(() => {
+      setPriceData(prev => ({...prev, ...all}));
+      // Save everything to cache
+      saveCache(all, freshYields, freshMacro);
+    });
     setLastUpdated(new Date());
     setLoading(false);
   }, []);
