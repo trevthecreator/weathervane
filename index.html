@@ -106,41 +106,55 @@ async function fetch5Y(ticker) {
     if (!closes?.length) return null;
     const first = closes[0], last = closes[closes.length-1];
     return first ? ((last-first)/first)*100 : null;
-  } catch { return null; }
+  } catch(e) { return null; }
 }
 
-// ── Yahoo Finance: bulk dividend yield via quote endpoint ────────────────────
-async function fetchQuoteData(tickers) {
+// ── Yahoo Finance: per-ticker fundamentals via quoteSummary ──────────────────
+function qRaw(obj, key) { return obj && obj[key] && obj[key].raw != null ? obj[key].raw : null; }
+
+async function fetchQuoteDataSingle(ticker) {
+  try {
+    var sym = YF_SYM(ticker);
+    var url = "/api/proxy?url=" + encodeURIComponent(
+      "https://query1.finance.yahoo.com/v10/finance/quoteSummary/" + sym + "?modules=defaultKeyStatistics,financialData,summaryDetail"
+    );
+    var resp = await fetch(url);
+    var d = await resp.json();
+    var r = d && d.quoteSummary && d.quoteSummary.result && d.quoteSummary.result[0];
+    if (!r) return null;
+    var ks = r.defaultKeyStatistics || {};
+    var fd = r.financialData || {};
+    var sd = r.summaryDetail || {};
+    var dy = qRaw(sd, "dividendYield");
+    if (dy != null) dy = dy * 100;
+    else {
+      dy = qRaw(sd, "trailingAnnualDividendYield");
+      if (dy != null) dy = dy * 100;
+    }
+    return {
+      divYield:    dy,
+      trailingPE:  qRaw(sd, "trailingPE") || qRaw(ks, "trailingPE"),
+      forwardPE:   qRaw(ks, "forwardPE") || qRaw(sd, "forwardPE"),
+      epsTTM:      qRaw(ks, "trailingEps"),
+      epsFwd:      qRaw(ks, "forwardEps"),
+      targetMean:  qRaw(fd, "targetMeanPrice"),
+      targetHigh:  qRaw(fd, "targetHighPrice"),
+      targetLow:   qRaw(fd, "targetLowPrice"),
+      analystCount:qRaw(fd, "numberOfAnalystOpinions"),
+    };
+  } catch(e) { return null; }
+}
+
+async function fetchQuoteData(tickers, onProgress) {
   const results = {};
-  const BATCH = 20;
+  const BATCH = 10, DELAY = 1500;
   for (let i = 0; i < tickers.length; i += BATCH) {
-    try {
-      const batch = tickers.slice(i, i + BATCH).map(YF_SYM);
-      const url = "/api/proxy?url=" + encodeURIComponent(
-        `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${batch.join(",")}&fields=trailingAnnualDividendYield,trailingPE,forwardPE,epsTrailingTwelveMonths,epsForward,targetMeanPrice,targetHighPrice,targetLowPrice,numberOfAnalystOpinions`
-      );
-      const d = await (await fetch(url)).json();
-      const quotes = d?.quoteResponse?.result || [];
-      quotes.forEach(q => {
-        if (!q.symbol) return;
-        let tk = q.symbol;
-        if (tk === "BRK-B") tk = "BRK/B";
-        else if (tk === "BTC-USD") tk = "BTC";
-        else if (tk === "ETH-USD") tk = "ETH";
-        results[tk] = {
-          divYield: q.trailingAnnualDividendYield != null ? q.trailingAnnualDividendYield * 100 : null,
-          trailingPE: q.trailingPE ?? null,
-          forwardPE: q.forwardPE ?? null,
-          epsTTM: q.epsTrailingTwelveMonths ?? null,
-          epsFwd: q.epsForward ?? null,
-          targetMean: q.targetMeanPrice ?? null,
-          targetHigh: q.targetHighPrice ?? null,
-          targetLow: q.targetLowPrice ?? null,
-          analystCount: q.numberOfAnalystOpinions ?? null,
-        };
-      });
-    } catch {}
-    if (i + BATCH < tickers.length) await new Promise(r => setTimeout(r, 500));
+    await Promise.allSettled(tickers.slice(i, i + BATCH).map(async t => {
+      const r = await fetchQuoteDataSingle(t);
+      if (r) results[t] = r;
+    }));
+    if (onProgress) onProgress({...results});
+    if (i + BATCH < tickers.length) await new Promise(r => setTimeout(r, DELAY));
   }
   return results;
 }
@@ -196,7 +210,7 @@ async function fredSeries(id, limit=5) {
     const url="/api/proxy?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=${limit}&file_type=json`);
     const d=await (await fetch(url)).json();
     return (d.observations||[]).filter(o=>o.value!==".").map(o=>parseFloat(o.value));
-  } catch { return []; }
+  } catch(e) { return []; }
 }
 
 // ── FRED: yield curve ─────────────────────────────────────────────────────────
@@ -847,7 +861,7 @@ function StockTracker() {
   // ── Cache helpers ──────────────────────────────────────────────────────────
   const CACHE_KEY = "awpt_cache_v1";
   const saveCache = (prices, yld, mac) => {
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), prices, yields: yld, macro: mac })); } catch {}
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), prices, yields: yld, macro: mac })); } catch(e) {}
   };
   const loadCache = () => {
     try {
@@ -857,7 +871,7 @@ function StockTracker() {
       // Cache valid for 24 hours
       if (Date.now() - c.ts > 24 * 60 * 60 * 1000) return null;
       return c;
-    } catch { return null; }
+    } catch(e) { return null; }
   };
 
   // ── Restore cache instantly on mount ─────────────────────────────────────
@@ -918,7 +932,7 @@ function StockTracker() {
               liveBuf[ticker] = { price: trade.p, time: trade.t };
             }
           });
-        } catch {}
+        } catch(e) {}
       };
 
       ws.onerror = () => setWsStatus("error");
@@ -960,7 +974,7 @@ function StockTracker() {
     const all={};
     for (let i=0; i<tickers.length; i+=BATCH) {
       await Promise.allSettled(tickers.slice(i,i+BATCH).map(async t => {
-        try { const r=await fetchTicker(t); if (r) all[t]=r; } catch {}
+        try { const r=await fetchTicker(t); if (r) all[t]=r; } catch(e) {}
       }));
       setPriceData(prev => ({...prev, ...all}));
       setProgress(Math.min(i+BATCH, tickers.length));
@@ -976,7 +990,7 @@ function StockTracker() {
       saveCache(all, freshYields, freshMacro);
     });
     // Dividend yields via Yahoo quote endpoint
-    fetchQuoteData(tickers).then(qd => { if (qd) setQuoteData(qd); }).catch(()=>{});
+    fetchQuoteData(tickers, (partial) => setQuoteData(partial)).then(qd => { if (qd) setQuoteData(qd); }).catch(()=>{});
     setLastUpdated(new Date());
     setLoading(false);
   }, []);
