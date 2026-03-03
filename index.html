@@ -45,7 +45,7 @@ const S = {
 };
 
 
-const FINNHUB_KEY = "d6jbi09r01ql467j3kngd6jbi09r01ql467j3ko0";
+const FINNHUB_KEY = "d6jc641r01ql467j68s0d6jc641r01ql467j68sg";
 const FRED_KEY    = "840b9d1b2587c5643366af907cd16ec3";
 
 // Symbol maps
@@ -106,7 +106,7 @@ async function fetch5Y(ticker) {
 // ── FRED: generic series fetch (desc, most recent first) ──────────────────────
 async function fredSeries(id, limit=5) {
   try {
-    const url=`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=${limit}&file_type=json`;
+    const url="https://corsproxy.io/?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=${limit}&file_type=json`);
     const d=await (await fetch(url)).json();
     return (d.observations||[]).filter(o=>o.value!==".").map(o=>parseFloat(o.value));
   } catch { return []; }
@@ -738,7 +738,7 @@ function StockTracker() {
         status.finnhub = fhRes.ok && fhData.s === "ok" ? "ok" : `err: ${fhRes.status} ${JSON.stringify(fhData).slice(0,80)}`;
       } catch(e) { status.finnhub = `err: ${e.message}`; }
       try {
-        const frUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${FRED_KEY}&sort_order=desc&limit=1&file_type=json`;
+        const frUrl = "https://corsproxy.io/?url=" + encodeURIComponent(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${FRED_KEY}&sort_order=desc&limit=1&file_type=json`);
         const frRes = await fetch(frUrl);
         const frData = await frRes.json();
         status.fred = frRes.ok && frData.observations?.length ? "ok" : `err: ${frRes.status} ${JSON.stringify(frData).slice(0,80)}`;
