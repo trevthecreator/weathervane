@@ -26,23 +26,19 @@ const { useState, useMemo, useEffect, useCallback } = React;
 
 
 // ── Shared style values ───────────────────────────────────────────────────────
-const S = {
-  sans: "'DM Sans','Segoe UI',sans-serif",
-  mono: "'Space Mono',monospace",
-  bg:   "#080c12",
-  bg1:  "#0b1118",
-  bg2:  "#0d1520",
-  bg3:  "#0d1a26",
-  bdr:  "#1e2d3d",
-  bdr2: "#1a2535",
-  dim:  "#4a6278",
-  dim2: "#2e4560",
-  txt:  "#e2e8f0",
-  txt2: "#7a8fa3",
-  acc:  "#38bdf8",
-  grn:  "#22c55e",
-  red:  "#ef4444",
+const DARK = {
+  sans:"'DM Sans','Segoe UI',sans-serif", mono:"'Space Mono',monospace",
+  bg:"#080c12", bg1:"#0b1118", bg2:"#0d1520", bg3:"#0d1a26",
+  bdr:"#1e2d3d", bdr2:"#1a2535", dim:"#4a6278", dim2:"#2e4560",
+  txt:"#e2e8f0", txt2:"#7a8fa3", acc:"#38bdf8", grn:"#22c55e", red:"#ef4444",
 };
+const LIGHT = {
+  sans:"'DM Sans','Segoe UI',sans-serif", mono:"'Space Mono',monospace",
+  bg:"#f1f5f9", bg1:"#ffffff", bg2:"#e2e8f0", bg3:"#dbe4ee",
+  bdr:"#cbd5e1", bdr2:"#d1dbe6", dim:"#64748b", dim2:"#94a3b8",
+  txt:"#0f172a", txt2:"#475569", acc:"#0284c7", grn:"#16a34a", red:"#dc2626",
+};
+var S = DARK;
 
 
 const FINNHUB_KEY = "d6jc641r01ql467j68s0d6jc641r01ql467j68sg"; // used for real-time WebSocket
@@ -109,55 +105,56 @@ async function fetch5Y(ticker) {
   } catch(e) { return null; }
 }
 
-// ── Yahoo Finance: per-ticker fundamentals via quoteSummary ──────────────────
-function qRaw(obj, key) { return obj && obj[key] && obj[key].raw != null ? obj[key].raw : null; }
-
+// ── Finnhub: per-ticker fundamentals ─────────────────────────────────────────
 async function fetchQuoteDataSingle(ticker) {
+  if (ticker === "BTC" || ticker === "ETH") return null;
+  var sym = ticker === "BRK/B" ? "BRK.B" : ticker;
   try {
-    var sym = YF_SYM(ticker);
-    var url = "/api/proxy?url=" + encodeURIComponent(
-      "https://query1.finance.yahoo.com/v10/finance/quoteSummary/" + sym + "?modules=defaultKeyStatistics,financialData,summaryDetail"
+    var mUrl = "/api/proxy?url=" + encodeURIComponent(
+      "https://finnhub.io/api/v1/stock/metric?symbol=" + sym + "&metric=all&token=" + FINNHUB_KEY
     );
-    var resp = await fetch(url);
-    var d = await resp.json();
-    var r = d && d.quoteSummary && d.quoteSummary.result && d.quoteSummary.result[0];
-    if (!r) return null;
-    var ks = r.defaultKeyStatistics || {};
-    var fd = r.financialData || {};
-    var sd = r.summaryDetail || {};
-    var dy = qRaw(sd, "dividendYield");
-    if (dy != null) dy = dy * 100;
-    else {
-      dy = qRaw(sd, "trailingAnnualDividendYield");
-      if (dy != null) dy = dy * 100;
-    }
+    var tUrl = "/api/proxy?url=" + encodeURIComponent(
+      "https://finnhub.io/api/v1/stock/price-target?symbol=" + sym + "&token=" + FINNHUB_KEY
+    );
+    var results = await Promise.all([
+      fetch(mUrl).then(function(r) { return r.json(); }).catch(function() { return null; }),
+      fetch(tUrl).then(function(r) { return r.json(); }).catch(function() { return null; })
+    ]);
+    var m = results[0] && results[0].metric ? results[0].metric : {};
+    var t = results[1] || {};
+    var pe = m.peBasicExclExtraTTM || m.peTTM || null;
+    var fpe = m.peExclExtraAnnual || null;
+    var dy = m.dividendYieldIndicatedAnnual || null;
+    var eps = m.epsBasicExclExtraTTM || m.epsTTM || null;
+    var epsFwd = m.epsEstimateNextYear || null;
     return {
       divYield:    dy,
-      trailingPE:  qRaw(sd, "trailingPE") || qRaw(ks, "trailingPE"),
-      forwardPE:   qRaw(ks, "forwardPE") || qRaw(sd, "forwardPE"),
-      epsTTM:      qRaw(ks, "trailingEps"),
-      epsFwd:      qRaw(ks, "forwardEps"),
-      targetMean:  qRaw(fd, "targetMeanPrice"),
-      targetHigh:  qRaw(fd, "targetHighPrice"),
-      targetLow:   qRaw(fd, "targetLowPrice"),
-      analystCount:qRaw(fd, "numberOfAnalystOpinions"),
+      trailingPE:  pe,
+      forwardPE:   fpe,
+      epsTTM:      eps,
+      epsFwd:      epsFwd,
+      targetMean:  t.targetMean || null,
+      targetHigh:  t.targetHigh || null,
+      targetLow:   t.targetLow || null,
+      analystCount: t.lastUpdated ? 1 : null,
     };
   } catch(e) { return null; }
 }
 
 async function fetchQuoteData(tickers, onProgress) {
-  const results = {};
-  const BATCH = 10, DELAY = 1500;
-  for (let i = 0; i < tickers.length; i += BATCH) {
-    await Promise.allSettled(tickers.slice(i, i + BATCH).map(async t => {
-      const r = await fetchQuoteDataSingle(t);
-      if (r) results[t] = r;
+  var results = {};
+  var BATCH = 5, DELAY = 6000;
+  for (var i = 0; i < tickers.length; i += BATCH) {
+    await Promise.allSettled(tickers.slice(i, i + BATCH).map(function(t) {
+      return fetchQuoteDataSingle(t).then(function(r) { if (r) results[t] = r; });
     }));
-    if (onProgress) onProgress({...results});
-    if (i + BATCH < tickers.length) await new Promise(r => setTimeout(r, DELAY));
+    if (onProgress) onProgress(Object.assign({}, results));
+    if (i + BATCH < tickers.length) await new Promise(function(r) { setTimeout(r, DELAY); });
   }
   return results;
 }
+
+
 
 // ── Correlation Matrix: 3-month rolling correlations between asset classes ────
 const CORR_ASSETS = [
@@ -841,6 +838,7 @@ function StockTracker() {
   const [realReturns,   setRealReturns]   = useState(false); // subtract CPI from returns
   const [corrData,      setCorrData]      = useState(null);
   const [quoteData,     setQuoteData]     = useState({});
+  const [darkMode,      setDarkMode]      = useState(true);
   const [priceData,     setPriceData]     = useState({});
   const [yields,        setYields]        = useState({});
   const [macro,         setMacro]         = useState({});
@@ -1027,6 +1025,8 @@ function StockTracker() {
     else { setSortBy(col); setSortDir(1); }
   };
 
+  S = darkMode ? DARK : LIGHT;
+
   const filtered = useMemo(() => {
     let list = STOCKS;
     if (activeFilters.size > 0) list = list.filter(s => s.tags.some(t => activeFilters.has(t)));
@@ -1072,7 +1072,7 @@ function StockTracker() {
     <div style={{ background:S.bg, minHeight:"100vh", fontFamily:S.sans, color:S.txt, padding:"28px 32px" }}>
 
       {/* ── Header ── */}
-      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", borderBottom:"1px solid #1e2d3d", paddingBottom:"18px", marginBottom:"24px" }}>
+      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", borderBottom:"1px solid "+S.bdr, paddingBottom:"18px", marginBottom:"24px" }}>
         <div>
           <h1 style={{ fontSize:"22px", fontWeight:700, color:S.acc, margin:0, letterSpacing:"0.04em", fontFamily:S.sans }}>
             WEATHERVANE
@@ -1084,9 +1084,12 @@ function StockTracker() {
             </span>
           </p>
         </div>
-        <div style={{ textAlign:"right" }}>
-          <span style={{ fontSize:"20px", fontWeight:700, color:"#94a3b8", display:"block", fontFamily:S.sans }}>{STOCKS.length}</span>
-          <span style={{ fontSize:"10px", color:S.dim, letterSpacing:"0.04em" }}>INSTRUMENTS</span>
+        <div style={{ display:"flex", alignItems:"center", gap:"16px" }}>
+          <div style={{ textAlign:"right" }}>
+            <span style={{ fontSize:"20px", fontWeight:700, color:"#94a3b8", display:"block", fontFamily:S.sans }}>{STOCKS.length}</span>
+            <span style={{ fontSize:"10px", color:S.dim, letterSpacing:"0.04em" }}>INSTRUMENTS</span>
+          </div>
+          <button onClick={function(){setDarkMode(function(v){return !v})}} style={{background:S.bg2,border:"1px solid "+S.bdr,color:S.dim,padding:"6px 10px",fontSize:"14px",cursor:"pointer",lineHeight:1}} title={darkMode?"Light mode":"Dark mode"}>{darkMode?"\u2600":"\u263E"}</button>
         </div>
       </div>
 
@@ -1121,7 +1124,7 @@ function StockTracker() {
       {/* ── Search + Actions ── */}
       <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"20px", flexWrap:"wrap" }}>
         <input
-          style={{ background:S.bg2, border:"1px solid #1e2d3d", color:S.txt, padding:"8px 14px", fontSize:"13px", fontFamily:S.sans, width:"280px", outline:"none" }}
+          style={{ background:S.bg2, border:"1px solid "+S.bdr, color:S.txt, padding:"8px 14px", fontSize:"13px", fontFamily:S.sans, width:"280px", outline:"none" }}
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search ticker, name, or tag…"
@@ -1148,7 +1151,7 @@ function StockTracker() {
         {/* Export */}
         <button
           onClick={() => exportCSV(filtered)}
-          style={{ background:S.bg2, border:"1px solid #1e2d3d", color:"#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
+          style={{ background:S.bg2, border:"1px solid "+S.bdr, color:S.dim, padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
         >
           Export CSV
         </button>
@@ -1157,7 +1160,7 @@ function StockTracker() {
         <div style={{ position:"relative", display:"inline-block" }}>
           <button
             onClick={() => setShowColPicker(v => !v)}
-            style={{ background: showColPicker ? S.bg3 : S.bg2, border:`1px solid ${showColPicker ? S.acc : "#1e2d3d"}`, color: showColPicker ? S.acc : "#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
+            style={{ background: showColPicker ? S.bg3 : S.bg2, border:"1px solid "+(showColPicker ? S.acc : S.bdr), color: showColPicker ? S.acc : "#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
           >
             Columns ▾
           </button>
@@ -1178,7 +1181,7 @@ function StockTracker() {
         {/* Real Return Toggle */}
         <button
           onClick={() => setRealReturns(v => !v)}
-          style={{ background: realReturns ? "#22c55e22" : S.bg2, border: `1px solid ${realReturns ? S.grn : "#1e2d3d"}`, color: realReturns ? S.grn : "#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.15s" }}
+          style={{ background: realReturns ? "#22c55e22" : S.bg2, border:"1px solid "+(realReturns ? S.grn : S.bdr), color: realReturns ? S.grn : "#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.15s" }}
         >
           {realReturns ? "Real Returns (−CPI)" : "Nominal Returns"}
         </button>
@@ -1266,18 +1269,18 @@ function StockTracker() {
         <thead>
           <tr>
             {[["ticker","Ticker"],["name","Name"]].filter(([k])=>visibleCols.has(k)).map(([col, label]) => (
-              <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid #1e2d3d", whiteSpace:"nowrap", fontFamily:S.sans, }}>
+              <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid "+S.bdr, whiteSpace:"nowrap", fontFamily:S.sans, }}>
                 {label} {sortBy === col ? (sortDir === 1 ? "↑" : "↓") : ""}
               </th>
             ))}
             {[["price","Price"],["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"],["divYield","Div %"],["trailingPE","P/E"],["fwdPE","Fwd P/E"],["target","Target"],["upside","Upside"]].filter(([k])=>visibleCols.has(k)).map(([col, label]) => (
-              <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>
+              <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid "+S.bdr, fontFamily:S.sans, whiteSpace:"nowrap" }}>
                 {label} {sortBy === col ? (sortDir === 1 ? "↑" : "↓") : ""}
               </th>
             ))}
-            {visibleCols.has("spark") && <th style={{ textAlign:"left", padding:"6px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>1Y Chart</th>}
-            {visibleCols.has("tags") && <th style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans }}>Tags</th>}
-            {visibleCols.has("acct") && <th onClick={() => handleSort("acct")} style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color: sortBy === "acct" ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid #1e2d3d", fontFamily:S.sans }}>
+            {visibleCols.has("spark") && <th style={{ textAlign:"left", padding:"6px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid "+S.bdr, fontFamily:S.sans, whiteSpace:"nowrap" }}>1Y Chart</th>}
+            {visibleCols.has("tags") && <th style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid "+S.bdr, fontFamily:S.sans }}>Tags</th>}
+            {visibleCols.has("acct") && <th onClick={() => handleSort("acct")} style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color: sortBy === "acct" ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid "+S.bdr, fontFamily:S.sans }}>
               Ideal Account {sortBy === "acct" ? (sortDir === 1 ? "↑" : "↓") : ""}
             </th>}
           </tr>
@@ -1295,7 +1298,7 @@ function StockTracker() {
                 <tr
                   key={stock.ticker}
                   onClick={() => toggleRow(stock.ticker)}
-                  style={{ borderBottom: isOpen ? "none" : "1px solid #0d1520", background: isOpen ? S.bg3 : i % 2 === 0 ? "transparent" : S.bg, cursor:"pointer", }}
+                  style={{ borderBottom: isOpen ? "none" : "1px solid "+S.bg2, background: isOpen ? S.bg3 : i % 2 === 0 ? "transparent" : S.bg, cursor:"pointer", }}
                   onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = S.bg3; }}
                   onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = i % 2 === 0 ? "transparent" : S.bg; }}
                 >
@@ -1341,7 +1344,7 @@ function StockTracker() {
                       val = val - (cpi * scale);
                     }
                     return (
-                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.sans, fontSize:"12px", color: isPrice ? "#cbd5e1" : isDivYield ? (val>3?"#22c55e":val>1?"#94a3b8":"#4a6278") : isValCol ? (field==="upside" ? pctColor(val) : field==="target" ? "#94a3b8" : val!=null&&val<15 ? "#22c55e" : val!=null&&val<25 ? "#94a3b8" : "#f59e0b") : pctColor(val) }}>
+                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.sans, fontSize:"12px", color: isPrice ? S.txt : isDivYield ? (val>3?"#22c55e":val>1?"#94a3b8":"#4a6278") : isValCol ? (field==="upside" ? pctColor(val) : field==="target" ? "#94a3b8" : val!=null&&val<15 ? "#22c55e" : val!=null&&val<25 ? "#94a3b8" : "#f59e0b") : pctColor(val) }}>
                         {pd === undefined && !isDivYield && !isValCol ? <span style={{color:S.dim2,fontSize:"10px"}}>…</span>
                           : val === null || val === undefined ? "—"
                           : isDivYield ? val.toFixed(2)+"%"
@@ -1385,7 +1388,7 @@ function StockTracker() {
                 {/* ── Drawer ── */}
                 {isOpen && (
                   <tr key={`${stock.ticker}-drawer`}>
-                    <td colSpan={visibleCols.size} style={{ padding:"0", borderBottom:"1px solid #0d1520" }}>
+                    <td colSpan={visibleCols.size} style={{ padding:"0", borderBottom:"1px solid "+S.bg2 }}>
                       <div style={{ background:"#0a1520", borderLeft:"2px solid #38bdf8", margin:"0 0 0 44px", padding:"14px 20px 16px" }}>
 
                         {/* Thesis */}
@@ -1454,12 +1457,12 @@ function StockTracker() {
             );
           })}
           {filtered.length === 0 && (
-            <tr><td colSpan={11} style={{ padding:"32px", textAlign:"center", color:"#2a3d52", fontSize:"13px", fontFamily:S.sans }}>No instruments match current filters</td></tr>
+            <tr><td colSpan={11} style={{ padding:"32px", textAlign:"center", color:S.dim2, fontSize:"13px", fontFamily:S.sans }}>No instruments match current filters</td></tr>
           )}
         </tbody>
       </table>
 
-      <div style={{ borderTop:"1px solid #1e2d3d", marginTop:"28px", paddingTop:"12px", fontSize:"10px", color:"#2a3d52", display:"flex", justifyContent:"space-between", fontFamily:S.sans }}>
+      <div style={{ borderTop:"1px solid "+S.bdr, marginTop:"28px", paddingTop:"12px", fontSize:"10px", color:S.dim2, display:"flex", justifyContent:"space-between", fontFamily:S.sans }}>
         <span>Weathervane — All-Weather Portfolio Watchlist</span>
         <span>{new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</span>
       </div>
