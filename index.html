@@ -216,7 +216,7 @@ async function fredSeries(id, limit=5) {
 
 // ── FRED: yield curve ─────────────────────────────────────────────────────────
 async function fetchYieldCurve() {
-  const SERIES={"3M":"DGS3MO","2Y":"DGS2","5Y":"DGS5","7Y":"DGS7","10Y":"DGS10","30Y":"DGS30"};
+  const SERIES={"3M":"DGS3MO","1Y":"DGS1","2Y":"DGS2","3Y":"DGS3","5Y":"DGS5","7Y":"DGS7","10Y":"DGS10","30Y":"DGS30"};
   const results={};
   await Promise.all(Object.entries(SERIES).map(async ([label,id])=>{
     const v=await fredSeries(id,3);
@@ -283,7 +283,7 @@ function pctFmt(v)  { if(v==null) return "—"; return (v>=0?"+":"")+v.toFixed(2
 
 // ── YieldCurve component ───────────────────────────────────────────────────────
 function YieldCurve({ yields }) {
-  const NODES=[["3M",6],["2Y",30],["5Y",54],["7Y",78],["10Y",102],["30Y",130]];
+  const NODES=[["3M",6],["1Y",20],["2Y",34],["3Y",48],["5Y",64],["7Y",82],["10Y",102],["30Y",130]];
   const vals=NODES.map(([k])=>yields[k]?.cur).filter(v=>v!=null);
   const sans="'DM Sans','Segoe UI',sans-serif";
   if (vals.length<2) return <span style={{color:"#2e4560",fontSize:"11px"}}>Loading…</span>;
@@ -305,7 +305,7 @@ function YieldCurve({ yields }) {
           const prev=yields[k]?.prev; const chg=prev!=null?v-prev:0;
           return (
             <g key={k}>
-              <circle cx={x} cy={toY(v)} r="2.5" fill="#38bdf8"/>
+              <circle cx={x} cy={toY(v)} r="2.5" fill={yields[k]&&yields[k].src==="realtime"?"#22c55e":"#38bdf8"}/>
               <text x={x} y={H+14} textAnchor="middle" fill="#4a6278" fontSize="8" fontFamily={S.sans}>{k}</text>
               <text x={x} y={toY(v)-6} textAnchor="middle" fill="#94a3b8" fontSize="7.5" fontFamily={S.sans}>{v.toFixed(2)}</text>
               {Math.abs(chg)>0.001&&<text x={x} y={toY(v)-15} textAnchor="middle" fill={chg>0?"#ef4444":"#22c55e"} fontSize="7" fontFamily={S.sans}>{chg>0?"+":""}{chg.toFixed(2)}</text>}
@@ -320,6 +320,9 @@ function YieldCurve({ yields }) {
         </div>
         {s2s10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>2s/10s: <span style={{color:s2s10<0?"#ef4444":"#94a3b8"}}>{s2s10>=0?"+":""}{s2s10.toFixed(2)}%</span></div>}
         {s3m10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>3m/10y: <span style={{color:s3m10<0?"#ef4444":"#94a3b8"}}>{s3m10>=0?"+":""}{s3m10.toFixed(2)}%</span></div>}
+        <div style={{fontSize:"8px",color:"#4a6278",fontFamily:S.sans,marginTop:"4px",cursor:"help"}} title={"Green dots (3M, 5Y, 10Y, 30Y) update real-time via Yahoo Finance.\nBlue dots (1Y, 2Y, 3Y, 7Y) update daily ~6PM ET via FRED."}>
+          <span style={{color:"#22c55e"}}>{"●"}</span> Real-time{"  "}<span style={{color:"#38bdf8"}}>{"●"}</span> Daily ~6PM ET
+        </div>
       </div>
     </div>
   );
@@ -840,9 +843,7 @@ function StockTracker() {
   const [visibleCols,   setVisibleCols]   = useState(new Set(["ticker","name","price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","divYield","trailingPE","fwdPE","target","upside","spark","tags","acct"]));
   const [returnsPref, setReturnsPref] = useState(new Set(["dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"]));
   const [valPref, setValPref] = useState(new Set(["trailingPE","fwdPE","target","upside"]));
-  const [returnsOn, setReturnsOn] = useState(true);
-  const [valOn, setValOn] = useState(true);
-  const [showColPicker, setShowColPicker] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [realReturns,   setRealReturns]   = useState(false); // subtract CPI from returns
   const [corrData,      setCorrData]      = useState(null);
   const [quoteData,     setQuoteData]     = useState({});
@@ -971,7 +972,21 @@ function StockTracker() {
     setProgress(prev => prev || 0);
     // FRED fires independently — different API, no Finnhub rate impact
     let freshYields = null, freshMacro = null;
-    fetchYieldCurve().then(v => { if (v) { setYields(v); freshYields = v; } }).catch(()=>{});
+    fetchYieldCurve().then(function(v) {
+      if (v) {
+        Object.keys(v).forEach(function(k) { if (v[k]) v[k].src = "daily"; });
+        setYields(v); freshYields = v;
+        fetchRealtimeYields().then(function(rt) {
+          if (rt && Object.keys(rt).length > 0) {
+            var merged = Object.assign({}, v);
+            Object.keys(rt).forEach(function(k) {
+              if (merged[k]) { merged[k] = { cur: rt[k], prev: merged[k].prev, src: "realtime" }; }
+            });
+            setYields(merged); freshYields = merged;
+          }
+        }).catch(function(){});
+      }
+    }).catch(function(){});
     fetchMacroData().then(v  => { if (v) { setMacro(v);  freshMacro  = v; } }).catch(()=>{});
     fetchCorrelationData("6mo").then(v => { if (v) setCorrData(v); }).catch(()=>{});
     // Yahoo Finance: no strict rate limit — fire in batches of 20 with short pauses
@@ -1005,6 +1020,24 @@ function StockTracker() {
     loadAll();
     const interval = setInterval(loadAll, 5 * 60 * 1000); // refresh every 5 min
     return () => clearInterval(interval);
+  }, []);
+
+  // Real-time yield refresh every 60s
+  useEffect(function() {
+    var yieldTimer = setInterval(function() {
+      fetchRealtimeYields().then(function(rt) {
+        if (rt && Object.keys(rt).length > 0) {
+          setYields(function(prev) {
+            var merged = Object.assign({}, prev);
+            Object.keys(rt).forEach(function(k) {
+              if (merged[k]) { merged[k] = { cur: rt[k], prev: merged[k].prev, src: "realtime" }; }
+            });
+            return merged;
+          });
+        }
+      }).catch(function(){});
+    }, 60000);
+    return function() { clearInterval(yieldTimer); };
   }, []);
 
   const toggleFilter     = (tag) => setActiveFilters(prev => { const n = new Set(prev); n.has(tag) ? n.delete(tag) : n.add(tag); return n; });
@@ -1165,93 +1198,43 @@ function StockTracker() {
           Export CSV
         </button>
 
-        {/* Column Picker */}
-        <div style={{ position:"relative", display:"inline-block" }}>
-          <button
-            onClick={() => setShowColPicker(v => !v)}
-            style={{ background: showColPicker ? S.bg3 : S.bg2, border:"1px solid "+(showColPicker ? S.acc : S.bdr), color: showColPicker ? S.acc : S.dim, padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
-          >
-            Columns ▾
-          </button>
-          {showColPicker && (
-            <div style={{ position:"absolute", top:"100%", left:0, marginTop:"4px", background:S.bg1, border:"1px solid "+S.bdr, padding:"8px 0", zIndex:50, minWidth:"200px" }}>
-              <div style={{ padding:"4px 14px 2px", fontSize:"10px", fontWeight:700, color:S.dim, letterSpacing:"0.06em", fontFamily:S.sans }}>LAYOUT</div>
-              {[["ticker","Ticker"],["name","Name"],["price","Price"],["divYield","Div Yield"],["spark","1Y Chart"],["tags","Tags"],["acct","Account"]].map(function(arr) {
-                var k=arr[0], label=arr[1];
-                return (
-                  <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"4px 14px", fontSize:"11px", color: visibleCols.has(k) ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
-                    onClick={function() { setVisibleCols(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; }); }}
-                  >
-                    <span style={{ width:14, height:14, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"10px", background: visibleCols.has(k) ? S.acc+"22" : "transparent", color: visibleCols.has(k) ? S.acc : "transparent" }}>✓</span>
-                    {label}
-                  </label>
-                );
-              })}
-              <div style={{ borderTop:"1px solid "+S.bdr, margin:"6px 0 2px" }}></div>
-              <label style={{ display:"flex", alignItems:"center", gap:"8px", padding:"5px 14px", fontSize:"11px", fontWeight:700, color: returnsOn ? S.acc : S.dim, cursor:"pointer", fontFamily:S.sans }}
-                onClick={function() {
-                  if (returnsOn) { setReturnsOn(false); setVisibleCols(function(prev) { var n=new Set(prev); RETURNS_COLS.forEach(function(c){n.delete(c)}); return n; }); }
-                  else { setReturnsOn(true); setVisibleCols(function(prev) { var n=new Set(prev); returnsPref.forEach(function(c){n.add(c)}); return n; }); }
-                }}
-              >
-                <span style={{ width:14, height:14, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"10px", background: returnsOn ? S.acc+"22" : "transparent", color: returnsOn ? S.acc : "transparent" }}>✓</span>
-                {returnsOn ? "▶" : "▼"} Returns
-              </label>
-              {returnsOn && [["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"]].map(function(arr) {
-                var k=arr[0], label=arr[1], isOn = returnsPref.has(k);
-                return (
-                  <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"3px 14px 3px 30px", fontSize:"11px", color: isOn ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
-                    onClick={function() {
-                      setReturnsPref(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
-                      setVisibleCols(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
-                    }}
-                  >
-                    <span style={{ width:13, height:13, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"9px", background: isOn ? S.acc+"22" : "transparent", color: isOn ? S.acc : "transparent" }}>✓</span>
-                    {label}
-                  </label>
-                );
-              })}
-              <div style={{ borderTop:"1px solid "+S.bdr, margin:"6px 0 2px" }}></div>
-              <label style={{ display:"flex", alignItems:"center", gap:"8px", padding:"5px 14px", fontSize:"11px", fontWeight:700, color: valOn ? S.acc : S.dim, cursor:"pointer", fontFamily:S.sans }}
-                onClick={function() {
-                  if (valOn) { setValOn(false); setVisibleCols(function(prev) { var n=new Set(prev); VAL_COLS.forEach(function(c){n.delete(c)}); return n; }); }
-                  else { setValOn(true); setVisibleCols(function(prev) { var n=new Set(prev); valPref.forEach(function(c){n.add(c)}); return n; }); }
-                }}
-              >
-                <span style={{ width:14, height:14, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"10px", background: valOn ? S.acc+"22" : "transparent", color: valOn ? S.acc : "transparent" }}>✓</span>
-                {valOn ? "▶" : "▼"} Valuation
-              </label>
-              {valOn && [["trailingPE","P/E"],["fwdPE","Fwd P/E"],["target","Target"],["upside","Upside"]].map(function(arr) {
-                var k=arr[0], label=arr[1], isOn = valPref.has(k);
-                return (
-                  <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"3px 14px 3px 30px", fontSize:"11px", color: isOn ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
-                    onClick={function() {
-                      setValPref(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
-                      setVisibleCols(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
-                    }}
-                  >
-                    <span style={{ width:13, height:13, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"9px", background: isOn ? S.acc+"22" : "transparent", color: isOn ? S.acc : "transparent" }}>✓</span>
-                    {label}
-                  </label>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Group Toggle Buttons */}
+        {/* Column Group Dropdowns */}
         {[
-          { label:"Returns", on:returnsOn, setOn:setReturnsOn, pref:returnsPref, cols:RETURNS_COLS },
-          { label:"Valuation", on:valOn, setOn:setValOn, pref:valPref, cols:VAL_COLS },
-        ].map(function(g) {
+          { id:"core", label:"Core Data", items:[["ticker","Ticker"],["name","Name"],["price","Price"],["divYield","Div Yield"],["spark","1Y Chart"],["tags","Tags"],["acct","Account"]] },
+          { id:"returns", label:"Returns", items:[["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"]] },
+          { id:"valuation", label:"Valuation", items:[["trailingPE","P/E"],["fwdPE","Fwd P/E"],["target","Target"],["upside","Upside"]] },
+        ].map(function(group) {
+          var isOpen = openDropdown === group.id;
+          var anyOn = group.items.some(function(arr) { return visibleCols.has(arr[0]); });
           return (
-            <button key={g.label}
-              onClick={function() {
-                if (g.on) { g.setOn(false); setVisibleCols(function(prev) { var n=new Set(prev); g.cols.forEach(function(c){n.delete(c)}); return n; }); }
-                else { g.setOn(true); setVisibleCols(function(prev) { var n=new Set(prev); g.pref.forEach(function(c){n.add(c)}); return n; }); }
-              }}
-              style={{ background: g.on ? S.acc+"18" : S.bg2, border:"1px solid "+(g.on ? S.acc : S.bdr), color: g.on ? S.acc : S.dim, padding:"6px 12px", fontSize:"11px", fontFamily:S.sans, cursor:"pointer" }}
-            >{g.on ? "▶ " : "▼ "}{g.label}</button>
+            <div key={group.id} style={{ position:"relative", display:"inline-block" }}>
+              <button
+                onClick={function() { setOpenDropdown(function(prev) { return prev === group.id ? null : group.id; }); }}
+                style={{ background: isOpen ? S.bg3 : anyOn ? S.acc+"18" : S.bg2, border:"1px solid "+(isOpen ? S.acc : anyOn ? S.acc : S.bdr), color: isOpen ? S.acc : anyOn ? S.acc : S.dim, padding:"6px 12px", fontSize:"11px", fontFamily:S.sans, cursor:"pointer" }}
+              >
+                {group.label} {isOpen ? "\u25b4" : "\u25be"}
+              </button>
+              {isOpen && (
+                <div style={{ position:"absolute", top:"100%", left:0, marginTop:"4px", background:S.bg1, border:"1px solid "+S.bdr, padding:"6px 0", zIndex:50, minWidth:"150px" }}>
+                  {group.items.map(function(arr) {
+                    var k=arr[0], label=arr[1];
+                    var isOn = visibleCols.has(k);
+                    return (
+                      <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"4px 14px", fontSize:"11px", color: isOn ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
+                        onClick={function() {
+                          setVisibleCols(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
+                          if (group.id==="returns") { setReturnsPref(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; }); }
+                          if (group.id==="valuation") { setValPref(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; }); }
+                        }}
+                      >
+                        <span style={{ width:13, height:13, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"9px", background: isOn ? S.acc+"22" : "transparent", color: isOn ? S.acc : "transparent" }}>\u2713</span>
+                        {label}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
 
@@ -1466,7 +1449,7 @@ function StockTracker() {
                 {isOpen && (
                   <tr key={`${stock.ticker}-drawer`}>
                     <td colSpan={visibleCols.size} style={{ padding:"0", borderBottom:"1px solid "+S.bg2 }}>
-                      <div style={{ background:"#0a1520", borderLeft:"2px solid #38bdf8", margin:"0 0 0 44px", padding:"14px 20px 16px" }}>
+                      <div style={{ background:S.bg2, borderLeft:"2px solid "+S.acc, margin:"0 0 0 44px", padding:"14px 20px 16px" }}>
 
                         {/* Thesis */}
                         {getTh(_th) ? (
@@ -1502,28 +1485,12 @@ function StockTracker() {
                           );
                         })()}
 
-                        {/* Entry zone */}
-                        <div style={{ display:"flex", alignItems:"center", gap:"20px", flexWrap:"wrap" }}>
-                          {getEn(_th) ? (
-                            <div>
-                              <span style={{ fontSize:"10px", color:S.dim, fontWeight:600, letterSpacing:"0.06em", display:"block", marginBottom:"4px" }}>TARGET ENTRY ZONE</span>
-                              <span style={{ fontSize:"15px", fontWeight:700, color:S.grn, fontFamily:S.sans }}>
-                                ${getEn(_th)[0].toLocaleString()} – ${getEn(_th)[1].toLocaleString()}
-                              </span>
-                            </div>
-                          ) : (
-                            <div>
-                              <span style={{ fontSize:"10px", color:S.dim, fontWeight:600, letterSpacing:"0.06em", display:"block", marginBottom:"4px" }}>TARGET ENTRY ZONE</span>
-                              <span style={{ fontSize:"12px", color:S.dim2, fontStyle:"italic" }}>Index / no specific entry target</span>
-                            </div>
-                          )}
-
-                          <div>
-                            <span style={{ fontSize:"10px", color:S.dim, fontWeight:600, letterSpacing:"0.06em", display:"block", marginBottom:"4px" }}>PREFERRED ACCOUNT</span>
-                            <span style={{ fontSize:"13px", fontWeight:600, color: ACCT_COLOR[acctKey], fontFamily:S.sans }}>
-                              {ACCT[acctKey]}
-                            </span>
-                          </div>
+                        {/* Preferred Account */}
+                        <div>
+                          <span style={{ fontSize:"10px", color:S.dim, fontWeight:600, letterSpacing:"0.06em", display:"block", marginBottom:"4px" }}>PREFERRED ACCOUNT</span>
+                          <span style={{ fontSize:"13px", fontWeight:600, color: ACCT_COLOR[acctKey], fontFamily:S.sans }}>
+                            {ACCT[acctKey]}
+                          </span>
                         </div>
 
                       </div>
