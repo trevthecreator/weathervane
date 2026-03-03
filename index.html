@@ -241,17 +241,14 @@ function signal(val, goodAbove, warnAbove) {
   if (warnAbove!=null && val>=warnAbove) return "#f59e0b";
   return S.red;
 }
-function MacroTile({ label, value, sub, color, wide }) {
+function MacroTile({ label, value, sub, color }) {
   return (
-    <div style={{ minWidth: wide?"160px":"110px", flex:"0 0 auto" }}>
-      <div style={{ fontSize:"8px", color:S.dim, letterSpacing:"0.07em", fontFamily:S.sans, marginBottom:"3px", whiteSpace:"nowrap" }}>{label}</div>
-      <div style={{ fontSize:"15px", fontWeight:700, color:color||S.txt, fontFamily:S.sans, lineHeight:1.2 }}>{value??<span style={{color:S.dim2}}>—</span>}</div>
-      {sub && <div style={{ fontSize:"9px", color:S.dim, fontFamily:S.sans, marginTop:"2px" }}>{sub}</div>}
+    <div style={{ padding:"10px 0" }}>
+      <div style={{ fontSize:"8px", color:S.dim, letterSpacing:"0.06em", fontFamily:S.sans, marginBottom:"4px", whiteSpace:"nowrap" }}>{label}</div>
+      <div style={{ fontSize:"16px", fontWeight:700, color:color||S.txt, fontFamily:S.sans, lineHeight:1.2 }}>{value??<span style={{color:S.dim2}}>—</span>}</div>
+      {sub && <div style={{ fontSize:"9px", color:S.dim, fontFamily:S.sans, marginTop:"3px" }}>{sub}</div>}
     </div>
   );
-}
-function Divider() {
-  return <div style={{ width:"1px", background:S.bdr2, alignSelf:"stretch", margin:"0 4px" }} />;
 }
 
 // ── Dalio Regime Widget (unchanged logic) ─────────────────────────────────────
@@ -298,81 +295,78 @@ function DalioRegime({ macro }) {
 // ── Full Macro Panel (2 rows) ─────────────────────────────────────────────────
 function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }) {
   const m = macro || {};
-  // Row 1: Regime indicators
-  // Buffett: >140% expensive, 100-140 fair, <100 cheap
 
-  // Real FF: >2 tight (red), 0-2 neutral (yellow), <0 loose (green)
   const realFFColor = m.realFF==null ? S.dim : m.realFF>2 ? S.red : m.realFF>0 ? "#f59e0b" : S.grn;
-  // ERP: S&P earnings yield (~1/26 fwd PE ≈ 3.8%) minus 10Y yield. Approx with breakeven
-  // We derive ERP = rough estimated earnings yield (use 4.2% as S&P proxy) - 10Y yield
   const tenY = yields["10Y"]?.cur;
-  const snpEarnYield = 4.2; // approximate S&P 500 forward earnings yield (update manually or via finnhub later)
+  const snpEarnYield = 4.2;
   const erp = tenY!=null ? snpEarnYield - tenY : null;
   const erpColor = erp==null ? S.dim : erp>2 ? S.grn : erp>0.5 ? "#f59e0b" : S.red;
-  // Credit spreads: IG normal <150bp, HY normal <400bp
   const igColor = m.igSpread==null ? S.dim : m.igSpread<1.5 ? S.grn : m.igSpread<2.5 ? "#f59e0b" : S.red;
   const hyColor = m.hySpread==null ? S.dim : m.hySpread<4   ? S.grn : m.hySpread<6   ? "#f59e0b" : S.red;
-  // Row 2: Cycle
   const m2Color = m.m2YoY==null ? S.dim : Math.abs(m.m2YoY)<3 ? S.grn : Math.abs(m.m2YoY)<8 ? "#f59e0b" : S.red;
   const leiColor = m.leiChg==null ? S.dim : m.leiChg>0 ? S.grn : m.leiChg>-1 ? "#f59e0b" : S.red;
 
-  const row = { display:"flex", alignItems:"flex-start", gap:"0", flexWrap:"wrap", borderBottom:`1px solid ${S.bdr2}`, paddingBottom:"14px", marginBottom:"14px" };
-  const gap = { width:"28px", flexShrink:0 };
-  return (
-    <div style={{ background:S.bg1, border:`1px solid ${S.bdr2}`, padding:"16px 20px", marginBottom:"20px" }}>
+  const sectionLabel = { fontSize:"8px", color:S.dim2, letterSpacing:"0.08em", fontFamily:S.sans, marginBottom:"10px", marginTop:"18px" };
+  const grid2 = { display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 24px" };
+  const grid3 = { display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(140px, 1fr))", gap:"0 24px" };
+  const divider = { borderBottom:`1px solid ${S.bdr2}`, margin:"4px 0" };
 
-      {/* Panel title row */}
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"14px" }}>
+  return (
+    <div style={{ background:S.bg1, border:`1px solid ${S.bdr2}`, padding:"18px 20px", marginBottom:"20px" }}>
+
+      {/* Panel header */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"6px" }}>
         <div style={{ fontSize:"9px", color:S.dim, letterSpacing:"0.1em", fontFamily:S.sans }}>MACRO DASHBOARD — DALIO ALL-WEATHER VIEW</div>
-        <div style={{ fontSize:"9px", color:S.dim2, fontFamily:S.sans, textAlign:"right" }}>
+        <div style={{ fontSize:"9px", color:S.dim2, fontFamily:S.sans, textAlign:"right", whiteSpace:"nowrap" }}>
           {loading && progress < STOCKS.length && <span style={{ color:S.acc, marginRight:"8px" }}>Loading {progress}/{STOCKS.length}…</span>}
           {lastUpdated && <span>{lastUpdated.toLocaleTimeString()} <span style={{ cursor:"pointer", color:loading?S.dim2:S.acc }} onClick={onRefresh}>{loading?"…":"↻"}</span></span>}
         </div>
       </div>
 
-      {/* Row 1: Valuations + Monetary */}
-      <div style={{ fontSize:"8px", color:S.dim2, letterSpacing:"0.08em", fontFamily:S.sans, marginBottom:"8px" }}>VALUATIONS &amp; MONETARY CONDITIONS</div>
-      <div style={row}>
-        <DalioRegime macro={m} />
-        <div style={gap}/>
-        <Divider/>
-        <div style={gap}/>
+      {/* ── REGIME ── */}
+      <div style={sectionLabel}>ECONOMIC REGIME</div>
+      <DalioRegime macro={m} />
+      <div style={divider}/>
 
+      {/* ── RATES & MONETARY ── */}
+      <div style={sectionLabel}>RATES &amp; MONETARY CONDITIONS</div>
+      <div style={grid3}>
         <MacroTile
           label="EQUITY RISK PREMIUM"
           value={erp!=null ? (erp>=0?"+":"")+erp.toFixed(2)+"%" : null}
           sub={tenY!=null ? `10Y: ${tenY.toFixed(2)}% · EY: ~${snpEarnYield}%` : "S&P earn yield − 10Y"}
           color={erpColor}
         />
-        <div style={gap}/>
         <MacroTile
           label="FED FUNDS (NOMINAL)"
           value={m.fedFunds!=null ? m.fedFunds.toFixed(2)+"%" : null}
           sub={m.breakeven!=null ? `Breakeven: ${m.breakeven.toFixed(2)}%` : null}
           color={S.txt}
         />
-        <div style={gap}/>
         <MacroTile
           label="REAL FED FUNDS RATE"
           value={m.realFF!=null ? (m.realFF>=0?"+":"")+m.realFF.toFixed(2)+"%" : null}
           sub={m.cpiYoY!=null ? `CPI YoY: ${m.cpiYoY.toFixed(1)}%` : "Nominal − CPI YoY"}
           color={realFFColor}
         />
-        <div style={gap}/>
+      </div>
+      <div style={divider}/>
+
+      {/* ── CREDIT & LIQUIDITY ── */}
+      <div style={sectionLabel}>CREDIT &amp; LIQUIDITY</div>
+      <div style={grid3}>
         <MacroTile
           label="IG CREDIT SPREAD"
           value={m.igSpread!=null ? m.igSpread.toFixed(2)+"%" : null}
           sub={m.igPrev!=null ? arrow(m.igSpread,m.igPrev)+" vs prev" : "OAS, <1.5% = tight"}
           color={igColor}
         />
-        <div style={gap}/>
         <MacroTile
           label="HY CREDIT SPREAD"
           value={m.hySpread!=null ? m.hySpread.toFixed(2)+"%" : null}
           sub={m.hyPrev!=null ? arrow(m.hySpread,m.hyPrev)+" vs prev" : "OAS, <4% = tight"}
           color={hyColor}
         />
-        <div style={gap}/>
         <MacroTile
           label="M2 YOY GROWTH"
           value={m.m2YoY!=null ? (m.m2YoY>=0?"+":"")+m.m2YoY.toFixed(1)+"%" : null}
@@ -380,26 +374,24 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
           color={m2Color}
         />
       </div>
+      <div style={divider}/>
 
-      {/* Row 2: Yield Curve + Cycle */}
-      <div style={{ fontSize:"8px", color:S.dim2, letterSpacing:"0.08em", fontFamily:S.sans, marginBottom:"8px" }}>YIELD CURVE &amp; ECONOMIC CYCLE</div>
-      <div style={{ display:"flex", alignItems:"flex-start", gap:"0", flexWrap:"wrap" }}>
-        <div>
-          <div style={{ fontSize:"8px", color:S.dim, letterSpacing:"0.07em", marginBottom:"8px", fontFamily:S.sans }}>US TREASURY CURVE</div>
-          <YieldCurve yields={yields} />
-        </div>
-        <div style={gap}/>
-        <Divider/>
-        <div style={gap}/>
+      {/* ── YIELD CURVE ── */}
+      <div style={sectionLabel}>YIELD CURVE</div>
+      <div style={{ marginBottom:"8px" }}>
+        <YieldCurve yields={yields} />
+      </div>
+      <div style={divider}/>
+
+      {/* ── GROWTH CYCLE ── */}
+      <div style={sectionLabel}>GROWTH CYCLE</div>
+      <div style={grid2}>
         <MacroTile
           label="LEADING ECON INDEX (LEI)"
           value={m.leiLatest!=null ? m.leiLatest.toFixed(1) : null}
           sub={m.leiChg!=null ? `6mo chg: ${m.leiChg>=0?"+":""}${m.leiChg.toFixed(1)}` : "USSLIND"}
           color={leiColor}
         />
-        <div style={gap}/>
-
-
         <MacroTile
           label="INDL PRODUCTION YOY"
           value={m.growthRising!=null ? (m.growthRising?"Rising ↑":"Falling ↓") : null}
