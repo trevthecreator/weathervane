@@ -126,7 +126,9 @@ async function fetchQuoteDataSingle(ticker) {
         "https://query1.finance.yahoo.com/v11/finance/quoteSummary/" + yfSym + "?modules=financialData"
       );
       var tResp = await fetch(tUrl);
-      var tData = await tResp.json();
+      var tRaw = await tResp.text();
+      if (["AAPL","MSFT","NVDA"].indexOf(ticker)>=0) console.log("[YF-TARGET] "+ticker+" status:"+tResp.status+" raw:"+tRaw.substring(0,300));
+      var tData; try { tData = JSON.parse(tRaw); } catch(e) { tData = null; }
       var fd = tData && tData.quoteSummary && tData.quoteSummary.result && tData.quoteSummary.result[0] && tData.quoteSummary.result[0].financialData;
       if (fd) {
         t.targetMean = fd.targetMeanPrice && fd.targetMeanPrice.raw ? fd.targetMeanPrice.raw : null;
@@ -334,7 +336,7 @@ function YieldCurve({ yields }) {
           const prev=yields[k]?.prev; const chg=prev!=null?v-prev:0;
           return (
             <g key={k}>
-              <circle cx={x} cy={toY(v)} r="2.5" fill={yields[k]&&yields[k].src==="realtime"?"#22c55e":"#38bdf8"}/>
+              <circle cx={x} cy={toY(v)} r="2.5" fill="#38bdf8"/>
               <text x={x} y={H+14} textAnchor="middle" fill="#4a6278" fontSize="8" fontFamily={S.sans}>{k}</text>
               <text x={x} y={toY(v)-6} textAnchor="middle" fill="#94a3b8" fontSize="7.5" fontFamily={S.sans}>{v.toFixed(2)}</text>
               {Math.abs(chg)>0.001&&<text x={x} y={toY(v)-15} textAnchor="middle" fill={chg>0?"#ef4444":"#22c55e"} fontSize="7" fontFamily={S.sans}>{chg>0?"+":""}{chg.toFixed(2)}</text>}
@@ -1001,21 +1003,7 @@ function StockTracker() {
     setProgress(prev => prev || 0);
     // FRED fires independently — different API, no Finnhub rate impact
     let freshYields = null, freshMacro = null;
-    fetchYieldCurve().then(function(v) {
-      if (v) {
-        Object.keys(v).forEach(function(k) { if (v[k]) v[k].src = "daily"; });
-        setYields(v); freshYields = v;
-        fetchRealtimeYields().then(function(rt) {
-          if (rt && Object.keys(rt).length > 0) {
-            var merged = Object.assign({}, v);
-            Object.keys(rt).forEach(function(k) {
-              if (merged[k]) { merged[k] = { cur: rt[k], prev: merged[k].prev, src: "realtime" }; }
-            });
-            setYields(merged); freshYields = merged;
-          }
-        }).catch(function(){});
-      }
-    }).catch(function(){});
+    fetchYieldCurve().then(function(v) { if (v) { setYields(v); freshYields = v; } }).catch(function(){});
     fetchMacroData().then(v  => { if (v) { setMacro(v);  freshMacro  = v; } }).catch(()=>{});
     fetchCorrelationData("6mo").then(v => { if (v) setCorrData(v); }).catch(()=>{});
     // Yahoo Finance: no strict rate limit — fire in batches of 20 with short pauses
@@ -1051,23 +1039,7 @@ function StockTracker() {
     return () => clearInterval(interval);
   }, []);
 
-  // Real-time yield refresh every 60s
-  useEffect(function() {
-    var yieldTimer = setInterval(function() {
-      fetchRealtimeYields().then(function(rt) {
-        if (rt && Object.keys(rt).length > 0) {
-          setYields(function(prev) {
-            var merged = Object.assign({}, prev);
-            Object.keys(rt).forEach(function(k) {
-              if (merged[k]) { merged[k] = { cur: rt[k], prev: merged[k].prev, src: "realtime" }; }
-            });
-            return merged;
-          });
-        }
-      }).catch(function(){});
-    }, 60000);
-    return function() { clearInterval(yieldTimer); };
-  }, []);
+
 
   const toggleFilter     = (tag) => setActiveFilters(prev => { const n = new Set(prev); n.has(tag) ? n.delete(tag) : n.add(tag); return n; });
   const toggleBucketOpen = (id)  => setOpenBuckets(prev   => { const n = new Set(prev); n.has(id)  ? n.delete(id)  : n.add(id);  return n; });
