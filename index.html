@@ -109,6 +109,33 @@ async function fetch5Y(ticker) {
   } catch { return null; }
 }
 
+// ── Yahoo Finance: bulk dividend yield via quote endpoint ────────────────────
+async function fetchDividendYields(tickers) {
+  const results = {};
+  const BATCH = 20;
+  for (let i = 0; i < tickers.length; i += BATCH) {
+    try {
+      const batch = tickers.slice(i, i + BATCH).map(YF_SYM);
+      const url = "/api/proxy?url=" + encodeURIComponent(
+        `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${batch.join(",")}&fields=trailingAnnualDividendYield`
+      );
+      const d = await (await fetch(url)).json();
+      const quotes = d?.quoteResponse?.result || [];
+      quotes.forEach(q => {
+        if (q.symbol && q.trailingAnnualDividendYield != null) {
+          let tk = q.symbol;
+          if (tk === "BRK-B") tk = "BRK/B";
+          else if (tk === "BTC-USD") tk = "BTC";
+          else if (tk === "ETH-USD") tk = "ETH";
+          results[tk] = q.trailingAnnualDividendYield * 100;
+        }
+      });
+    } catch {}
+    if (i + BATCH < tickers.length) await new Promise(r => setTimeout(r, 500));
+  }
+  return results;
+}
+
 // ── Correlation Matrix: 3-month rolling correlations between asset classes ────
 const CORR_ASSETS = [
   { label:"US Eq",  sym:"SPY" },
@@ -118,12 +145,12 @@ const CORR_ASSETS = [
   { label:"LT Bond",sym:"TLT" },
   { label:"Intl Bd",sym:"BNDX" },
 ];
-async function fetchCorrelationData() {
+async function fetchCorrelationData(range="6mo") {
   try {
     const dailyReturns = {};
     await Promise.all(CORR_ASSETS.map(async ({label, sym}) => {
       const url = "/api/proxy?url=" + encodeURIComponent(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=3mo`
+        `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1y`
       );
       const d = await (await fetch(url)).json();
       const closes = d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
@@ -136,6 +163,9 @@ async function fetchCorrelationData() {
       dailyReturns[label] = ret;
     }));
     const labels = CORR_ASSETS.map(a=>a.label).filter(l=>dailyReturns[l]?.length>10);
+    // Slice to window: ~21 trading days/month
+    const windowDays = {["1mo"]:21, ["3mo"]:63, ["6mo"]:126, ["1y"]:252}[range] || 126;
+    labels.forEach(l => { dailyReturns[l] = dailyReturns[l].slice(-windowDays); });
     const minLen = Math.min(...labels.map(l=>dailyReturns[l].length));
     labels.forEach(l => { dailyReturns[l] = dailyReturns[l].slice(-minLen); });
     const corr = {};
@@ -147,7 +177,7 @@ async function fetchCorrelationData() {
       for(let i=0;i<n;i++){ const da=ra[i]-ma,db=rb[i]-mb; cv+=da*db; va+=da*da; vb+=db*db; }
       corr[a][b] = (va>0&&vb>0) ? cv/Math.sqrt(va*vb) : 0;
     });});
-    return { labels, corr };
+    return { labels, corr, range, tradingDays: minLen };
   } catch(e) { console.error("Corr err",e); return null; }
 }
 
@@ -446,11 +476,18 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
 }
 
 // ── Correlation Matrix Heatmap ───────────────────────────────────────────────
-function CorrelationMatrix({ corrData }) {
+function CorrelationMatrix({ corrData, onRangeChange }) {
   if (!corrData) return null;
-  const { labels, corr } = corrData;
+  const { labels, corr, range, tradingDays } = corrData;
   if (!labels?.length) return null;
   const cellSize = 52, labelW = 60, fontSize = 10;
+  const ranges = ["1mo","3mo","6mo","1y"];
+  const rangeLabels = {["1mo"]:"1M", ["3mo"]:"3M", ["6mo"]:"6M", ["1y"]:"1Y"};
+  // Stress check: count pairs with |corr| > 0.8
+  let highCorrPairs = 0;
+  labels.forEach((a,i) => { labels.forEach((b,j) => {
+    if (j>i && Math.abs(corr[a]?.[b]||0) > 0.8) highCorrPairs++;
+  });});
   const corrColor = (v) => {
     if (v >= 0.7)  return "#22c55e";
     if (v >= 0.3)  return "#22c55e88";
@@ -467,7 +504,15 @@ function CorrelationMatrix({ corrData }) {
   };
   return (
     <div style={{ background:S.bg1, border:`1px solid ${S.bdr2}`, padding:"18px 20px", marginBottom:"20px" }}>
-      <div style={{ fontSize:"9px", color:S.dim, letterSpacing:"0.1em", fontFamily:S.sans, marginBottom:"14px" }}>ASSET CLASS CORRELATIONS — 3 MONTH ROLLING</div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"14px", flexWrap:"wrap", gap:"10px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+          <span style={{ fontSize:"9px", color:S.dim, letterSpacing:"0.1em", fontFamily:S.sans }}>ASSET CLASS CORRELATIONS</span>
+          {highCorrPairs > 0 && <span style={{ fontSize:"9px", color:"#f59e0b", fontFamily:S.sans, background:"#f59e0b18", padding:"2px 8px", border:"1px solid #f59e0b45" }}>⚠ {highCorrPairs} pair{highCorrPairs>1?"s":""} &gt;0.8</span>}
+        </div>
+        <div style={{ display:"flex", gap:"2px" }}>
+          {ranges.map(r => <button key={r} onClick={() => onRangeChange(r)} style={{ background: r===range ? S.acc+"22" : S.bg2, border:`1px solid ${r===range ? S.acc : S.bdr2}`, color: r===range ? S.acc : S.dim, padding:"4px 10px", fontSize:"10px", fontFamily:S.sans, cursor:"pointer", fontWeight: r===range ? 700 : 400 }}>{rangeLabels[r]}</button>)}
+        </div>
+      </div>
       <div style={{ overflowX:"auto" }}>
         <table style={{ borderCollapse:"collapse", fontFamily:S.sans }}>
           <thead>
@@ -497,7 +542,7 @@ function CorrelationMatrix({ corrData }) {
         </table>
       </div>
       <div style={{ fontSize:"9px", color:S.dim2, fontFamily:S.sans, marginTop:"10px" }}>
-        <span style={{ color:"#22c55e" }}>Green</span> = correlated · <span style={{ color:"#94a3b8" }}>Gray</span> = uncorrelated · <span style={{ color:"#ef4444" }}>Red</span> = negatively correlated · SPY/DBC/GLD/VNQ/TLT/BNDX as proxies
+        <span style={{ color:"#22c55e" }}>Green</span> = correlated · <span style={{ color:"#94a3b8" }}>Gray</span> = uncorrelated · <span style={{ color:"#ef4444" }}>Red</span> = negatively correlated · {tradingDays} trading days · SPY/DBC/GLD/VNQ/TLT/BNDX
       </div>
     </div>
   );
@@ -768,10 +813,11 @@ function StockTracker() {
   const [sortDir,       setSortDir]       = useState(1);
   const [expandedRow,   setExpandedRow]   = useState(null);
   const [inSeasonOnly,  setInSeasonOnly]  = useState(false);
-  const [visibleCols,   setVisibleCols]   = useState(new Set(["ticker","name","price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","spark","tags","acct"]));
+  const [visibleCols,   setVisibleCols]   = useState(new Set(["ticker","name","price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","divYield","spark","tags","acct"]));
   const [showColPicker, setShowColPicker] = useState(false);
   const [realReturns,   setRealReturns]   = useState(false); // subtract CPI from returns
   const [corrData,      setCorrData]      = useState(null);
+  const [divYields,     setDivYields]     = useState({});
   const [priceData,     setPriceData]     = useState({});
   const [yields,        setYields]        = useState({});
   const [macro,         setMacro]         = useState({});
@@ -898,7 +944,7 @@ function StockTracker() {
     let freshYields = null, freshMacro = null;
     fetchYieldCurve().then(v => { if (v) { setYields(v); freshYields = v; } }).catch(()=>{});
     fetchMacroData().then(v  => { if (v) { setMacro(v);  freshMacro  = v; } }).catch(()=>{});
-    fetchCorrelationData().then(v => { if (v) setCorrData(v); }).catch(()=>{});
+    fetchCorrelationData("6mo").then(v => { if (v) setCorrData(v); }).catch(()=>{});
     // Yahoo Finance: no strict rate limit — fire in batches of 20 with short pauses
     const tickers = STOCKS.map(s => s.ticker);
     const BATCH=20, DELAY=2000;
@@ -920,6 +966,8 @@ function StockTracker() {
       // Save everything to cache
       saveCache(all, freshYields, freshMacro);
     });
+    // Dividend yields via Yahoo quote endpoint
+    fetchDividendYields(tickers).then(dy => { if (dy) setDivYields(dy); }).catch(()=>{});
     setLastUpdated(new Date());
     setLoading(false);
   }, []);
@@ -980,6 +1028,7 @@ function StockTracker() {
         const pd = priceData[ticker];
         const live = livePrice[ticker];
         if (field === "price" && live?.price) return live.price;
+        if (field === "divYield") return divYields[ticker] ?? null;
         return pd?.[field] ?? null;
       };
       const av = getVal(a.ticker, sortBy), bv = getVal(b.ticker, sortBy);
@@ -988,7 +1037,7 @@ function StockTracker() {
       if (bv == null) return -1;
       return sortDir * (av - bv);
     });
-  }, [activeFilters, inSeasonOnly, macro, search, sortBy, sortDir, priceData, livePrice]);
+  }, [activeFilters, inSeasonOnly, macro, search, sortBy, sortDir, priceData, livePrice, divYields]);
 
   const activeCount = activeFilters.size;
 
@@ -1040,7 +1089,7 @@ function StockTracker() {
         onRefresh={loadAll}
       />
 
-      <CorrelationMatrix corrData={corrData} />
+      <CorrelationMatrix corrData={corrData} onRangeChange={(r) => fetchCorrelationData(r).then(v => { if (v) setCorrData(v); })} />
 
       {/* ── Search + Actions ── */}
       <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"20px", flexWrap:"wrap" }}>
@@ -1087,7 +1136,7 @@ function StockTracker() {
           </button>
           {showColPicker && (
             <div style={{ position:"absolute", top:"100%", left:0, marginTop:"4px", background:S.bg2, border:`1px solid ${S.bdr}`, padding:"8px 0", zIndex:50, minWidth:"160px" }}>
-              {[["ticker","Ticker"],["name","Name"],["price","Price"],["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"],["spark","1Y Chart"],["tags","Tags"],["acct","Account"]].map(([k,label]) => (
+              {[["ticker","Ticker"],["name","Name"],["price","Price"],["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"],["divYield","Div Yield"],["spark","1Y Chart"],["tags","Tags"],["acct","Account"]].map(([k,label]) => (
                 <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"4px 14px", fontSize:"11px", color: visibleCols.has(k) ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
                   onClick={() => setVisibleCols(prev => { const n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; })}
                 >
@@ -1194,7 +1243,7 @@ function StockTracker() {
                 {label} {sortBy === col ? (sortDir === 1 ? "↑" : "↓") : ""}
               </th>
             ))}
-            {[["price","Price"],["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"]].filter(([k])=>visibleCols.has(k)).map(([col, label]) => (
+            {[["price","Price"],["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"],["divYield","Div %"]].filter(([k])=>visibleCols.has(k)).map(([col, label]) => (
               <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>
                 {label} {sortBy === col ? (sortDir === 1 ? "↑" : "↓") : ""}
               </th>
@@ -1234,7 +1283,7 @@ function StockTracker() {
                     {stock.name}
                   </td>}
                   {/* Price + return columns */}
-                  {["price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"].filter(f=>visibleCols.has(f)).map(field => {
+                  {["price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","divYield"].filter(f=>visibleCols.has(f)).map(field => {
                     const pd = priceData[stock.ticker];
                     const live = livePrice[stock.ticker];
                     // Use live price for current price and daily change
@@ -1247,16 +1296,19 @@ function StockTracker() {
                       val = ((live.price - prevClose) / prevClose) * 100;
                     }
                     const isPrice = field === "price";
+                    const isDivYield = field === "divYield";
+                    if (isDivYield) val = divYields[stock.ticker] ?? null;
                     // Real return adjustment: subtract annualized CPI scaled to timeframe
-                    if (realReturns && val != null && !isPrice && field !== "dailyPct" && macro?.cpiYoY != null) {
+                    if (realReturns && val != null && !isPrice && !isDivYield && field !== "dailyPct" && macro?.cpiYoY != null) {
                       const cpi = macro.cpiYoY;
                       const scale = {ytdPct: (new Date().getMonth()+1)/12, sixMoPct:0.5, oneyPct:1, fiveyPct:5}[field] || 0;
                       val = val - (cpi * scale);
                     }
                     return (
-                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.sans, fontSize:"12px", color: isPrice ? "#cbd5e1" : pctColor(val) }}>
-                        {pd === undefined ? <span style={{color:S.dim2,fontSize:"10px"}}>…</span>
+                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.sans, fontSize:"12px", color: isPrice ? "#cbd5e1" : isDivYield ? (val>3?"#22c55e":val>1?"#94a3b8":"#4a6278") : pctColor(val) }}>
+                        {pd === undefined && !isDivYield ? <span style={{color:S.dim2,fontSize:"10px"}}>…</span>
                           : val === null || val === undefined ? "—"
+                          : isDivYield ? val.toFixed(2)+"%"
                           : isPrice ? (<>
                               {val < 1 ? val.toFixed(4) : val < 100 ? val.toFixed(2) : val.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}
                               {isLive && <span style={{display:"inline-block",width:5,height:5,borderRadius:"50%",background:S.grn,marginLeft:5,verticalAlign:"middle"}} title="Live" />}
