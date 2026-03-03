@@ -109,6 +109,48 @@ async function fetch5Y(ticker) {
   } catch { return null; }
 }
 
+// ── Correlation Matrix: 3-month rolling correlations between asset classes ────
+const CORR_ASSETS = [
+  { label:"US Eq",  sym:"SPY" },
+  { label:"Cmdty",  sym:"DBC" },
+  { label:"Gold",   sym:"GLD" },
+  { label:"REITs",  sym:"VNQ" },
+  { label:"LT Bond",sym:"TLT" },
+  { label:"Intl Bd",sym:"BNDX" },
+];
+async function fetchCorrelationData() {
+  try {
+    const dailyReturns = {};
+    await Promise.all(CORR_ASSETS.map(async ({label, sym}) => {
+      const url = "/api/proxy?url=" + encodeURIComponent(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=3mo`
+      );
+      const d = await (await fetch(url)).json();
+      const closes = d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+      if (!closes) return;
+      const ret = [];
+      for (let i=1;i<closes.length;i++) {
+        if (closes[i]!=null && closes[i-1]!=null && closes[i-1]!==0)
+          ret.push((closes[i]-closes[i-1])/closes[i-1]);
+      }
+      dailyReturns[label] = ret;
+    }));
+    const labels = CORR_ASSETS.map(a=>a.label).filter(l=>dailyReturns[l]?.length>10);
+    const minLen = Math.min(...labels.map(l=>dailyReturns[l].length));
+    labels.forEach(l => { dailyReturns[l] = dailyReturns[l].slice(-minLen); });
+    const corr = {};
+    labels.forEach(a => { corr[a] = {}; labels.forEach(b => {
+      if (a===b) { corr[a][b]=1; return; }
+      const ra=dailyReturns[a], rb=dailyReturns[b], n=Math.min(ra.length,rb.length);
+      const ma=ra.reduce((s,v)=>s+v,0)/n, mb=rb.reduce((s,v)=>s+v,0)/n;
+      let cv=0, va=0, vb=0;
+      for(let i=0;i<n;i++){ const da=ra[i]-ma,db=rb[i]-mb; cv+=da*db; va+=da*da; vb+=db*db; }
+      corr[a][b] = (va>0&&vb>0) ? cv/Math.sqrt(va*vb) : 0;
+    });});
+    return { labels, corr };
+  } catch(e) { console.error("Corr err",e); return null; }
+}
+
 // ── FRED: generic series fetch (desc, most recent first) ──────────────────────
 async function fredSeries(id, limit=5) {
   try {
@@ -403,6 +445,64 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
   );
 }
 
+// ── Correlation Matrix Heatmap ───────────────────────────────────────────────
+function CorrelationMatrix({ corrData }) {
+  if (!corrData) return null;
+  const { labels, corr } = corrData;
+  if (!labels?.length) return null;
+  const cellSize = 52, labelW = 60, fontSize = 10;
+  const corrColor = (v) => {
+    if (v >= 0.7)  return "#22c55e";
+    if (v >= 0.3)  return "#22c55e88";
+    if (v > -0.3)  return "#94a3b8";
+    if (v > -0.7)  return "#ef444488";
+    return "#ef4444";
+  };
+  const corrBg = (v) => {
+    if (v >= 0.7)  return "#22c55e18";
+    if (v >= 0.3)  return "#22c55e0a";
+    if (v > -0.3)  return "transparent";
+    if (v > -0.7)  return "#ef44440a";
+    return "#ef444418";
+  };
+  return (
+    <div style={{ background:S.bg1, border:`1px solid ${S.bdr2}`, padding:"18px 20px", marginBottom:"20px" }}>
+      <div style={{ fontSize:"9px", color:S.dim, letterSpacing:"0.1em", fontFamily:S.sans, marginBottom:"14px" }}>ASSET CLASS CORRELATIONS — 3 MONTH ROLLING</div>
+      <div style={{ overflowX:"auto" }}>
+        <table style={{ borderCollapse:"collapse", fontFamily:S.sans }}>
+          <thead>
+            <tr>
+              <th style={{ width:labelW, padding:"4px" }}></th>
+              {labels.map(l => (
+                <th key={l} style={{ width:cellSize, padding:"4px", fontSize:"8px", color:S.dim, fontWeight:600, textAlign:"center", letterSpacing:"0.04em" }}>{l}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {labels.map(row => (
+              <tr key={row}>
+                <td style={{ fontSize:"8px", color:S.dim, fontWeight:600, padding:"4px 8px 4px 0", textAlign:"right", letterSpacing:"0.04em" }}>{row}</td>
+                {labels.map(col => {
+                  const v = corr[row]?.[col] ?? 0;
+                  const isDiag = row === col;
+                  return (
+                    <td key={col} style={{ width:cellSize, height:36, textAlign:"center", fontSize:fontSize, fontWeight:isDiag?400:600, color: isDiag ? S.dim2 : corrColor(v), background: isDiag ? S.bg2 : corrBg(v), border:`1px solid ${S.bdr2}`, padding:"4px" }}>
+                      {isDiag ? "—" : (v>=0?"+":"")+v.toFixed(2)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize:"9px", color:S.dim2, fontFamily:S.sans, marginTop:"10px" }}>
+        <span style={{ color:"#22c55e" }}>Green</span> = correlated · <span style={{ color:"#94a3b8" }}>Gray</span> = uncorrelated · <span style={{ color:"#ef4444" }}>Red</span> = negatively correlated · SPY/DBC/GLD/VNQ/TLT/BNDX as proxies
+      </div>
+    </div>
+  );
+}
+
 // ── Bucket structure ─────────────────────────────────────────────────────────
 const BUCKETS = [
   { id: "commodities", label: "Commodities & Real Assets", emoji: "🪨",
@@ -448,6 +548,7 @@ const THESIS = {
   "BABA":  {t:"Deep value China tech; speculative, geopolitical risk acknowledged.",             e:[90,120],   a:"B"},
   "BHP":   {t:"Diversified mining giant — copper/iron/potash, strong dividend.",                 e:[55,68],    a:"B"},
   "BN":    {t:"Brookfield asset management; compounding fee streams + real asset upside.",       e:[38,44],    a:"B"},
+  "BNDX":  {t:"International bond diversification — currency + rate cycle offset to US duration.", e:[46,50],    a:"T"},
   "BP":    {t:"Transition energy at value; dividend support, undervalued vs peers.",             e:[30,36],    a:"B"},
   "BRK/B": {t:"Forever hold — Buffett capital allocation + diversified quality compounder.",     e:[430,480],  a:"B"},
   "BTC":   {t:"Digital gold — store of value, institutional adoption, fixed supply.",            e:[60000,80000],a:"R"},
@@ -472,6 +573,7 @@ const THESIS = {
   "GE":    {t:"Aerospace pure-play; jet engine aftermarket = durable recurring revenue.",       e:[150,175],  a:"B"},
   "GEV":   {t:"Grid infrastructure + offshore wind; energy transition pick-and-shovel.",        e:[200,250],  a:"B"},
   "GOLD":  {t:"World's largest gold miner by reserves; Tier 1 mines, gold price leverage.",     e:[16,20],    a:"B"},
+  "GLD":   {t:"Physical gold ETF — most liquid gold vehicle; inflation + tail risk hedge.",     e:[220,250],  a:"T"},
   "GOOGL": {t:"Search moat + cloud + AI integration; reasonable valuation vs megacap peers.",   e:[155,185],  a:"B"},
   "IAU":   {t:"Physical gold — inflation, dollar weakness, geopolitical tail risk hedge.",      e:[38,44],    a:"B"},
   "IBM":   {t:"Hybrid cloud + AI enterprise (watsonx); steady dividend, turnaround building.",  e:[195,220],  a:"B"},
@@ -497,9 +599,11 @@ const THESIS = {
   "QCOM":  {t:"Semiconductor diversification beyond mobile; auto/IoT revenue mix shift.",       e:[120,145],  a:"R"},
   "REXR":  {t:"Southern CA industrial REIT; irreplaceable infill locations, e-commerce.",       e:[30,38],    a:"B"},
   "RTX":   {t:"Defense + commercial aerospace; Pratt aftermarket + missile systems demand.",    e:[115,135],  a:"B"},
+  "SCHP":  {t:"US TIPS — real return preservation; direct CPI-linked inflation protection.",    e:[23,25],    a:"T"},
   "SPG":   {t:"Dominant mall REIT; premium centers resilient, international growth.",           e:[155,180],  a:"B"},
   "STAG":  {t:"Industrial/logistics REIT — monthly dividend, e-commerce demand.",               e:[33,38],    a:"B"},
   "TGT":   {t:"Retail at trough; inventory cycle normalizing, loyal customer base.",            e:[95,115],   a:"B"},
+  "TLT":   {t:"Long-duration Treasuries (20Y+) — deflation/recession hedge, rate cut beneficiary.", e:[85,95],  a:"T"},
   "TFPM":  {t:"Triple Flag streaming — base metals, 4 consecutive 5% dividend hikes.",         e:[16,20],    a:"B"},
   "TPL":   {t:"Permian Basin toll road — land + water royalties, essentially zero cost.",       e:[400,480],  a:"B"},
   "TSLA":  {t:"EV market share + energy storage; hold position size disciplined.",              e:[220,280],  a:"R"},
@@ -534,6 +638,7 @@ const STOCKS = [
  { ticker:"BABA", name:"Alibaba Group ADR", tags:["Tech","International"] },
  { ticker:"BHP", name:"BHP Group ADR", tags:["Mining & Metals","Copper","International"] },
  { ticker:"BN", name:"Brookfield Corp", tags:["Financials","International"] },
+ { ticker:"BNDX", name:"Vanguard Intl Bond ETF", tags:["ETF","Fixed Income","International"] },
  { ticker:"BP", name:"BP PLC ADR", tags:["Energy","International"] },
  { ticker:"BRK/B", name:"Berkshire Hathaway Cl B", tags:["Financials"] },
  { ticker:"BTC", name:"Bitcoin", tags:["Crypto"] },
@@ -556,6 +661,7 @@ const STOCKS = [
  { ticker:"FRT", name:"Federal Realty Trust", tags:["Net Lease"] },
  { ticker:"GE", name:"GE Aerospace", tags:["Defense & Aerospace","Industrial"] },
  { ticker:"GEV", name:"GE Vernova Inc", tags:["Energy Transition","Industrial"] },
+ { ticker:"GLD", name:"SPDR Gold Shares", tags:["ETF","Precious Metals"] },
  { ticker:"GOOGL", name:"Alphabet Inc Cl A", tags:["Tech"] },
  { ticker:"IAU", name:"iShares Gold Trust", tags:["ETF","Precious Metals"] },
  { ticker:"IBM", name:"IBM Corp", tags:["Tech","Industrial"] },
@@ -581,9 +687,11 @@ const STOCKS = [
  { ticker:"QCOM", name:"Qualcomm Inc", tags:["Tech"] },
  { ticker:"REXR", name:"Rexford Industrial", tags:["Industrial REIT"] },
  { ticker:"RTX", name:"RTX Corp", tags:["Defense & Aerospace","Industrial"] },
+ { ticker:"SCHP", name:"Schwab US TIPS ETF", tags:["ETF","Fixed Income"] },
  { ticker:"SPG", name:"Simon Property Group", tags:["Retail REIT"] },
  { ticker:"STAG", name:"STAG Industrial", tags:["Industrial REIT"] },
  { ticker:"TGT", name:"Target Corp", tags:["Consumer Staples"] },
+ { ticker:"TLT", name:"iShares 20+ Year Treasury", tags:["ETF","Fixed Income"] },
  { ticker:"TFPM", name:"Triple Flag Precious Metals", tags:["Precious Metals","Streaming & Royalty"] },
  { ticker:"TPL", name:"Texas Pacific Land", tags:["Land & Royalty","Energy"] },
  { ticker:"TSLA", name:"Tesla Inc", tags:["Tech","Energy Transition"] },
@@ -662,6 +770,8 @@ function StockTracker() {
   const [inSeasonOnly,  setInSeasonOnly]  = useState(false);
   const [visibleCols,   setVisibleCols]   = useState(new Set(["ticker","name","price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","spark","tags","acct"]));
   const [showColPicker, setShowColPicker] = useState(false);
+  const [realReturns,   setRealReturns]   = useState(false); // subtract CPI from returns
+  const [corrData,      setCorrData]      = useState(null);
   const [priceData,     setPriceData]     = useState({});
   const [yields,        setYields]        = useState({});
   const [macro,         setMacro]         = useState({});
@@ -788,6 +898,7 @@ function StockTracker() {
     let freshYields = null, freshMacro = null;
     fetchYieldCurve().then(v => { if (v) { setYields(v); freshYields = v; } }).catch(()=>{});
     fetchMacroData().then(v  => { if (v) { setMacro(v);  freshMacro  = v; } }).catch(()=>{});
+    fetchCorrelationData().then(v => { if (v) setCorrData(v); }).catch(()=>{});
     // Yahoo Finance: no strict rate limit — fire in batches of 20 with short pauses
     const tickers = STOCKS.map(s => s.ticker);
     const BATCH=20, DELAY=2000;
@@ -929,6 +1040,8 @@ function StockTracker() {
         onRefresh={loadAll}
       />
 
+      <CorrelationMatrix corrData={corrData} />
+
       {/* ── Search + Actions ── */}
       <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"20px", flexWrap:"wrap" }}>
         <input
@@ -985,6 +1098,14 @@ function StockTracker() {
             </div>
           )}
         </div>
+
+        {/* Real Return Toggle */}
+        <button
+          onClick={() => setRealReturns(v => !v)}
+          style={{ background: realReturns ? "#22c55e22" : S.bg2, border: `1px solid ${realReturns ? S.grn : "#1e2d3d"}`, color: realReturns ? S.grn : "#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.15s" }}
+        >
+          {realReturns ? "Real Returns (−CPI)" : "Nominal Returns"}
+        </button>
 
         <span style={{ fontSize:"12px", color:S.dim }}>
           {filtered.length} of {STOCKS.length} shown
@@ -1126,6 +1247,12 @@ function StockTracker() {
                       val = ((live.price - prevClose) / prevClose) * 100;
                     }
                     const isPrice = field === "price";
+                    // Real return adjustment: subtract annualized CPI scaled to timeframe
+                    if (realReturns && val != null && !isPrice && field !== "dailyPct" && macro?.cpiYoY != null) {
+                      const cpi = macro.cpiYoY;
+                      const scale = {ytdPct: (new Date().getMonth()+1)/12, sixMoPct:0.5, oneyPct:1, fiveyPct:5}[field] || 0;
+                      val = val - (cpi * scale);
+                    }
                     return (
                       <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.sans, fontSize:"12px", color: isPrice ? "#cbd5e1" : pctColor(val) }}>
                         {pd === undefined ? <span style={{color:S.dim2,fontSize:"10px"}}>…</span>
