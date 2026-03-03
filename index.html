@@ -120,7 +120,7 @@ async function fredSeries(id, limit=5) {
 
 // ── FRED: yield curve ─────────────────────────────────────────────────────────
 async function fetchYieldCurve() {
-  const SERIES={"3M":"DGS3MO","2Y":"DGS2","5Y":"DGS5","10Y":"DGS10","30Y":"DGS30"};
+  const SERIES={"3M":"DGS3MO","2Y":"DGS2","5Y":"DGS5","7Y":"DGS7","10Y":"DGS10","30Y":"DGS30"};
   const results={};
   await Promise.all(Object.entries(SERIES).map(async ([label,id])=>{
     const v=await fredSeries(id,3);
@@ -131,20 +131,17 @@ async function fetchYieldCurve() {
 
 // ── FRED: macro regime data ───────────────────────────────────────────────────
 async function fetchMacroData() {
-  const [be,indpro,ff,cpi,m2,will,gdp,lei,ig,hy,cn,eu]=await Promise.all([
+  const [be,indpro,ff,cpi,m2,lei,ig,hy]=await Promise.all([
     fredSeries("T10YIE",35),       // 10Y breakeven inflation, daily
     fredSeries("INDPRO",6),        // industrial production
     fredSeries("FEDFUNDS",2),      // fed funds rate
     fredSeries("CPIAUCSL",14),     // CPI index 14mo for YoY
     fredSeries("M2SL",14),         // M2 money supply 14mo
-    fredSeries("WILL5000INDFC",2), // Wilshire 5000 mkt cap ($B)
-    fredSeries("GDP",2),           // US nominal GDP ($B, quarterly)
     fredSeries("USSLIND",7),       // Leading Economic Index
     fredSeries("BAMLC0A0CM",2),    // IG credit OAS spread
     fredSeries("BAMLH0A0HYM2",2),  // HY credit OAS spread
-    fredSeries("CHPMINDX",2),      // China Manufacturing PMI
-    fredSeries("GEPMI",2),         // Eurozone Composite PMI
   ]);
+  // China/EU PMI and Buffett Indicator removed — no reliable free data source
   const inflationRising = be.length>=30 ? be[0]>be[29] : null;
   const growthRising    = indpro.length>=4 ? indpro[0]>indpro[3] : null;
   const regime = (inflationRising===null||growthRising===null) ? null
@@ -156,20 +153,15 @@ async function fetchMacroData() {
   const m2YoY  = m2.length>=13  ? ((m2[0]/m2[12])-1)*100  : null;
   const m2Prev = m2.length>=14  ? ((m2[1]/m2[13])-1)*100  : null;
   const realFF = (ff[0]!=null&&cpiYoY!=null) ? ff[0]-cpiYoY : null;
-  const buffett     = (will[0]&&gdp[0]) ? (will[0]/gdp[0])*100 : null;
-  const buffettPrev = (will[1]&&gdp[0]) ? (will[1]/gdp[0])*100 : null;
   const leiChg = lei.length>=7 ? lei[0]-lei[6] : null;
   return {
     regime, inflationRising, growthRising,
     fedFunds:ff[0]??null, fedFundsPrev:ff[1]??null, breakeven:be[0]??null,
     cpiYoY, realFF,
     m2YoY, m2Prev,
-    buffett, buffettPrev,
     leiLatest:lei[0]??null, leiChg,
     igSpread:ig[0]??null, igPrev:ig[1]??null,
     hySpread:hy[0]??null, hyPrev:hy[1]??null,
-    cnPMI:cn[0]??null, cnPrev:cn[1]??null,
-    euPMI:eu[0]??null, euPrev:eu[1]??null,
   };
 }
 
@@ -195,11 +187,11 @@ function pctFmt(v)  { if(v==null) return "—"; return (v>=0?"+":"")+v.toFixed(2
 
 // ── YieldCurve component ───────────────────────────────────────────────────────
 function YieldCurve({ yields }) {
-  const NODES=[["3M",10],["2Y",36],["5Y",62],["10Y",88],["30Y",114]];
+  const NODES=[["3M",6],["2Y",30],["5Y",54],["7Y",78],["10Y",102],["30Y",130]];
   const vals=NODES.map(([k])=>yields[k]?.cur).filter(v=>v!=null);
-  const sans="'DM Sans','Segoe UI',sans-serif", mono="'Space Mono',monospace";
+  const sans="'DM Sans','Segoe UI',sans-serif";
   if (vals.length<2) return <span style={{color:"#2e4560",fontSize:"11px"}}>Loading…</span>;
-  const H=44,W=124,pad=4;
+  const H=44,W=140,pad=4;
   const mn=Math.min(...vals)-0.05, mx=Math.max(...vals)+0.05;
   const toY=v=>H-((v-mn)/(mx-mn))*(H-pad*2)-pad;
   const pathD=NODES.map(([k,x],i)=>{ const v=yields[k]?.cur; if(v==null)return null; return `${i===0?"M":"L"}${x},${toY(v).toFixed(1)}`; }).filter(Boolean).join(" ");
@@ -219,7 +211,7 @@ function YieldCurve({ yields }) {
             <g key={k}>
               <circle cx={x} cy={toY(v)} r="2.5" fill="#38bdf8"/>
               <text x={x} y={H+14} textAnchor="middle" fill="#4a6278" fontSize="8" fontFamily={S.sans}>{k}</text>
-              <text x={x} y={toY(v)-6} textAnchor="middle" fill="#94a3b8" fontSize="7.5" fontFamily={S.mono}>{v.toFixed(2)}</text>
+              <text x={x} y={toY(v)-6} textAnchor="middle" fill="#94a3b8" fontSize="7.5" fontFamily={S.sans}>{v.toFixed(2)}</text>
               {Math.abs(chg)>0.001&&<text x={x} y={toY(v)-15} textAnchor="middle" fill={chg>0?"#ef4444":"#22c55e"} fontSize="7" fontFamily={S.sans}>{chg>0?"+":""}{chg.toFixed(2)}</text>}
             </g>
           );
@@ -228,7 +220,7 @@ function YieldCurve({ yields }) {
       <div style={{display:"flex",flexDirection:"column",gap:"5px"}}>
         <div>
           <div style={{fontSize:"9px",color:"#4a6278",letterSpacing:"0.06em",fontFamily:S.sans}}>CURVE SHAPE</div>
-          <div style={{fontSize:"13px",fontWeight:700,color:shapeColor,fontFamily:S.mono}}>{shape}</div>
+          <div style={{fontSize:"13px",fontWeight:700,color:shapeColor,fontFamily:S.sans}}>{shape}</div>
         </div>
         {s2s10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>2s/10s: <span style={{color:s2s10<0?"#ef4444":"#94a3b8"}}>{s2s10>=0?"+":""}{s2s10.toFixed(2)}%</span></div>}
         {s3m10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>3m/10y: <span style={{color:s3m10<0?"#ef4444":"#94a3b8"}}>{s3m10>=0?"+":""}{s3m10.toFixed(2)}%</span></div>}
@@ -253,7 +245,7 @@ function MacroTile({ label, value, sub, color, wide }) {
   return (
     <div style={{ minWidth: wide?"160px":"110px", flex:"0 0 auto" }}>
       <div style={{ fontSize:"8px", color:S.dim, letterSpacing:"0.07em", fontFamily:S.sans, marginBottom:"3px", whiteSpace:"nowrap" }}>{label}</div>
-      <div style={{ fontSize:"15px", fontWeight:700, color:color||S.txt, fontFamily:S.mono, lineHeight:1.2 }}>{value??<span style={{color:S.dim2}}>—</span>}</div>
+      <div style={{ fontSize:"15px", fontWeight:700, color:color||S.txt, fontFamily:S.sans, lineHeight:1.2 }}>{value??<span style={{color:S.dim2}}>—</span>}</div>
       {sub && <div style={{ fontSize:"9px", color:S.dim, fontFamily:S.sans, marginTop:"2px" }}>{sub}</div>}
     </div>
   );
@@ -279,7 +271,7 @@ function DalioRegime({ macro }) {
               const active=r===regime; const qc=REGIME_COLOR[r]||S.dim2;
               return (
                 <div key={r} style={{ padding:"5px 4px", background:active?qc+"28":S.bg2, border:`1px solid ${active?qc:S.bdr2}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <span style={{ fontSize:"7px", color:active?qc:S.dim2, fontFamily:S.mono, fontWeight:active?700:400, textAlign:"center", lineHeight:1.3 }}>{r.toUpperCase()}</span>
+                  <span style={{ fontSize:"7px", color:active?qc:S.dim2, fontFamily:S.sans, fontWeight:active?700:400, textAlign:"center", lineHeight:1.3 }}>{r.toUpperCase()}</span>
                 </div>
               );
             })}
@@ -290,7 +282,7 @@ function DalioRegime({ macro }) {
           </div>
         </div>
         <div style={{ paddingTop:"2px" }}>
-          <div style={{ fontSize:"14px", fontWeight:700, color, fontFamily:S.mono, marginBottom:"3px" }}>{regime||<span style={{color:S.dim2,fontSize:"11px"}}>Loading…</span>}</div>
+          <div style={{ fontSize:"14px", fontWeight:700, color, fontFamily:S.sans, marginBottom:"3px" }}>{regime||<span style={{color:S.dim2,fontSize:"11px"}}>Loading…</span>}</div>
           {regime&&<>
             <div style={{ fontSize:"9px", color:S.dim, fontFamily:S.sans, marginBottom:"4px" }}>
               Growth {growthRising?"↑":"↓"} · Inflation {inflationRising?"↑":"↓"}
@@ -308,8 +300,7 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
   const m = macro || {};
   // Row 1: Regime indicators
   // Buffett: >140% expensive, 100-140 fair, <100 cheap
-  const buffColor = m.buffett==null ? S.dim : m.buffett>140 ? S.red : m.buffett>100 ? "#f59e0b" : S.grn;
-  const buffPctChg = (m.buffett&&m.buffettPrev) ? m.buffett-m.buffettPrev : null;
+
   // Real FF: >2 tight (red), 0-2 neutral (yellow), <0 loose (green)
   const realFFColor = m.realFF==null ? S.dim : m.realFF>2 ? S.red : m.realFF>0 ? "#f59e0b" : S.grn;
   // ERP: S&P earnings yield (~1/26 fwd PE ≈ 3.8%) minus 10Y yield. Approx with breakeven
@@ -324,8 +315,7 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
   // Row 2: Cycle
   const m2Color = m.m2YoY==null ? S.dim : Math.abs(m.m2YoY)<3 ? S.grn : Math.abs(m.m2YoY)<8 ? "#f59e0b" : S.red;
   const leiColor = m.leiChg==null ? S.dim : m.leiChg>0 ? S.grn : m.leiChg>-1 ? "#f59e0b" : S.red;
-  const cnColor  = m.cnPMI==null ? S.dim  : m.cnPMI>52 ? S.grn : m.cnPMI>50 ? "#f59e0b" : S.red;
-  const euColor  = m.euPMI==null ? S.dim  : m.euPMI>52 ? S.grn : m.euPMI>50 ? "#f59e0b" : S.red;
+
   const row = { display:"flex", alignItems:"flex-start", gap:"0", flexWrap:"wrap", borderBottom:`1px solid ${S.bdr2}`, paddingBottom:"14px", marginBottom:"14px" };
   const gap = { width:"28px", flexShrink:0 };
   return (
@@ -347,14 +337,7 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
         <div style={gap}/>
         <Divider/>
         <div style={gap}/>
-        <MacroTile
-          label="BUFFETT INDICATOR (WILL5000/US GDP)"
-          value={m.buffett!=null ? m.buffett.toFixed(0)+"%" : null}
-          sub={buffPctChg!=null ? `${buffPctChg>=0?"+":""}${buffPctChg.toFixed(1)}pp prev` : ">140% = expensive"}
-          color={buffColor}
-          wide
-        />
-        <div style={gap}/>
+
         <MacroTile
           label="EQUITY RISK PREMIUM"
           value={erp!=null ? (erp>=0?"+":"")+erp.toFixed(2)+"%" : null}
@@ -415,20 +398,8 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
           color={leiColor}
         />
         <div style={gap}/>
-        <MacroTile
-          label="CHINA MFG PMI"
-          value={m.cnPMI!=null ? m.cnPMI.toFixed(1) : null}
-          sub={m.cnPrev!=null ? arrow(m.cnPMI,m.cnPrev)+" vs prev · 50=neutral" : "50 = expansion"}
-          color={cnColor}
-        />
-        <div style={gap}/>
-        <MacroTile
-          label="EUROZONE PMI"
-          value={m.euPMI!=null ? m.euPMI.toFixed(1) : null}
-          sub={m.euPrev!=null ? arrow(m.euPMI,m.euPrev)+" vs prev · 50=neutral" : "Composite"}
-          color={euColor}
-        />
-        <div style={gap}/>
+
+
         <MacroTile
           label="INDL PRODUCTION YOY"
           value={m.growthRising!=null ? (m.growthRising?"Rising ↑":"Falling ↓") : null}
@@ -696,6 +667,9 @@ function StockTracker() {
   const [sortBy,        setSortBy]        = useState("ticker");
   const [sortDir,       setSortDir]       = useState(1);
   const [expandedRow,   setExpandedRow]   = useState(null);
+  const [inSeasonOnly,  setInSeasonOnly]  = useState(false);
+  const [visibleCols,   setVisibleCols]   = useState(new Set(["ticker","name","price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","spark","tags","acct"]));
+  const [showColPicker, setShowColPicker] = useState(false);
   const [priceData,     setPriceData]     = useState({});
   const [yields,        setYields]        = useState({});
   const [macro,         setMacro]         = useState({});
@@ -709,7 +683,7 @@ function StockTracker() {
   useEffect(() => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap";
     document.head.appendChild(link);
   }, []);
 
@@ -882,6 +856,7 @@ function StockTracker() {
   const filtered = useMemo(() => {
     let list = STOCKS;
     if (activeFilters.size > 0) list = list.filter(s => s.tags.some(t => activeFilters.has(t)));
+    if (inSeasonOnly && macro?.regime) list = list.filter(s => isInSeason(s.tags, macro.regime));
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(s =>
@@ -893,9 +868,24 @@ function StockTracker() {
     return [...list].sort((a, b) => {
       if (sortBy === "ticker") return sortDir * a.ticker.localeCompare(b.ticker);
       if (sortBy === "name")   return sortDir * a.name.localeCompare(b.name);
-      return 0;
+      if (sortBy === "acct") {
+        const aAcct = getAc(a.ticker), bAcct = getAc(b.ticker);
+        return sortDir * aAcct.localeCompare(bAcct);
+      }
+      // Numeric columns: use priceData + livePrice
+      const getVal = (ticker, field) => {
+        const pd = priceData[ticker];
+        const live = livePrice[ticker];
+        if (field === "price" && live?.price) return live.price;
+        return pd?.[field] ?? null;
+      };
+      const av = getVal(a.ticker, sortBy), bv = getVal(b.ticker, sortBy);
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return sortDir * (av - bv);
     });
-  }, [activeFilters, search, sortBy, sortDir]);
+  }, [activeFilters, inSeasonOnly, macro, search, sortBy, sortDir, priceData, livePrice]);
 
   const activeCount = activeFilters.size;
 
@@ -916,14 +906,14 @@ function StockTracker() {
           </p>
         </div>
         <div style={{ textAlign:"right" }}>
-          <span style={{ fontSize:"20px", fontWeight:700, color:"#94a3b8", display:"block", fontFamily:S.mono }}>{STOCKS.length}</span>
+          <span style={{ fontSize:"20px", fontWeight:700, color:"#94a3b8", display:"block", fontFamily:S.sans }}>{STOCKS.length}</span>
           <span style={{ fontSize:"10px", color:S.dim, letterSpacing:"0.04em" }}>INSTRUMENTS</span>
         </div>
       </div>
 
       {/* ── API Status Banner (auto-hides when both OK) ── */}
       {apiStatus && (apiStatus.yahoo !== "ok" || apiStatus.fred !== "ok") && (
-        <div style={{ background:"#1a0a0a", border:"1px solid #4a2020", padding:"12px 16px", marginBottom:"20px", fontSize:"11px", fontFamily:S.mono, lineHeight:1.8 }}>
+        <div style={{ background:"#1a0a0a", border:"1px solid #4a2020", padding:"12px 16px", marginBottom:"20px", fontSize:"11px", fontFamily:S.sans, lineHeight:1.8 }}>
           <div style={{ color:"#f87171", fontWeight:600, marginBottom:"6px", fontFamily:S.sans, fontSize:"12px" }}>API DIAGNOSTICS</div>
           <div style={{ color: apiStatus.yahoo === "ok" ? S.grn : apiStatus.yahoo?.startsWith("err") ? "#f87171" : S.dim }}>
             Yahoo Finance (historical): {apiStatus.yahoo}
@@ -964,6 +954,16 @@ function StockTracker() {
           {activeCount > 0 ? `Clear ${activeCount} filter${activeCount > 1 ? "s" : ""}` : "Show All"}
         </button>
 
+        {/* In Season filter */}
+        {macro?.regime && (
+          <button
+            onClick={() => setInSeasonOnly(v => !v)}
+            style={{ background: inSeasonOnly ? REGIME_COLOR[macro.regime]+"28" : S.bg2, border: `1px solid ${inSeasonOnly ? REGIME_COLOR[macro.regime] : S.bdr}`, color: inSeasonOnly ? REGIME_COLOR[macro.regime] : S.dim, padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.15s", }}
+          >
+            ★ In Season ({macro.regime})
+          </button>
+        )}
+
         {/* Export */}
         <button
           onClick={() => exportCSV(filtered)}
@@ -971,6 +971,28 @@ function StockTracker() {
         >
           Export CSV
         </button>
+
+        {/* Column Picker */}
+        <div style={{ position:"relative", display:"inline-block" }}>
+          <button
+            onClick={() => setShowColPicker(v => !v)}
+            style={{ background: showColPicker ? S.bg3 : S.bg2, border:`1px solid ${showColPicker ? S.acc : "#1e2d3d"}`, color: showColPicker ? S.acc : "#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
+          >
+            Columns ▾
+          </button>
+          {showColPicker && (
+            <div style={{ position:"absolute", top:"100%", left:0, marginTop:"4px", background:S.bg2, border:`1px solid ${S.bdr}`, padding:"8px 0", zIndex:50, minWidth:"160px" }}>
+              {[["ticker","Ticker"],["name","Name"],["price","Price"],["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"],["spark","1Y Chart"],["tags","Tags"],["acct","Account"]].map(([k,label]) => (
+                <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"4px 14px", fontSize:"11px", color: visibleCols.has(k) ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
+                  onClick={() => setVisibleCols(prev => { const n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; })}
+                >
+                  <span style={{ width:14, height:14, border:`1px solid ${S.bdr}`, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"10px", background: visibleCols.has(k) ? S.acc+"22" : "transparent", color: visibleCols.has(k) ? S.acc : "transparent" }}>✓</span>
+                  {label}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
 
         <span style={{ fontSize:"12px", color:S.dim }}>
           {filtered.length} of {STOCKS.length} shown
@@ -1012,7 +1034,7 @@ function StockTracker() {
                     const tot = bucket.tags.reduce((n,t) => n + STOCKS.filter(s=>s.tags.includes(t)).length, 0);
                     const uniq = [...new Set(STOCKS.filter(s=>s.tags.some(t=>bucket.tags.includes(t))).map(s=>s.ticker))].length;
                     return (
-                      <span style={{ fontSize:"10px", color: sel>0 ? S.acc : S.dim2, marginLeft:"auto", paddingLeft:"8px", flexShrink:0, fontFamily:S.mono }}>
+                      <span style={{ fontSize:"10px", color: sel>0 ? S.acc : S.dim2, marginLeft:"auto", paddingLeft:"8px", flexShrink:0, fontFamily:S.sans }}>
                         {sel>0 ? `${bucket.tags.filter(t=>activeFilters.has(t)).length} filter${sel>1?"s":""} · ` : ""}{uniq}
                       </span>
                     );
@@ -1054,20 +1076,21 @@ function StockTracker() {
       <table style={{ width:"100%", borderCollapse:"collapse", fontSize:"12px" }}>
         <thead>
           <tr>
-            {[["ticker","Ticker"],["name","Name"]].map(([col, label]) => (
+            {[["ticker","Ticker"],["name","Name"]].filter(([k])=>visibleCols.has(k)).map(([col, label]) => (
               <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid #1e2d3d", whiteSpace:"nowrap", fontFamily:S.sans, }}>
                 {label} {sortBy === col ? (sortDir === 1 ? "↑" : "↓") : ""}
               </th>
             ))}
-            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>Price</th>
-            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>1D %</th>
-            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>YTD %</th>
-            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>6M %</th>
-            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>1Y %</th>
-            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>5Y %</th>
-            <th style={{ textAlign:"left", padding:"6px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>1Y Chart</th>
-            <th style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans }}>Tags</th>
-            <th style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans }}>Ideal Account</th>
+            {[["price","Price"],["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"]].filter(([k])=>visibleCols.has(k)).map(([col, label]) => (
+              <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>
+                {label} {sortBy === col ? (sortDir === 1 ? "↑" : "↓") : ""}
+              </th>
+            ))}
+            {visibleCols.has("spark") && <th style={{ textAlign:"left", padding:"6px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>1Y Chart</th>}
+            {visibleCols.has("tags") && <th style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans }}>Tags</th>}
+            {visibleCols.has("acct") && <th onClick={() => handleSort("acct")} style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color: sortBy === "acct" ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid #1e2d3d", fontFamily:S.sans }}>
+              Ideal Account {sortBy === "acct" ? (sortDir === 1 ? "↑" : "↓") : ""}
+            </th>}
           </tr>
         </thead>
         <tbody>
@@ -1087,18 +1110,18 @@ function StockTracker() {
                   onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = S.bg3; }}
                   onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = i % 2 === 0 ? "transparent" : S.bg; }}
                 >
-                  <td style={{ padding:"10px 14px", fontWeight:600, color:S.acc, whiteSpace:"nowrap", fontSize:"13px", fontFamily:S.sans }}>
+                  {visibleCols.has("ticker") && <td style={{ padding:"10px 14px", fontWeight:600, color:S.acc, whiteSpace:"nowrap", fontSize:"13px", fontFamily:S.sans }}>
                     <span style={{ marginRight:"6px", fontSize:"9px", color: isOpen ? S.acc : S.dim2, transition:"color 0.15s" }}>▶</span>
                     {stock.ticker}
                     {isInSeason(stock.tags, macro?.regime) && (
                       <span title={`Favored in ${macro.regime}`} style={{ marginLeft:"5px", fontSize:"9px", color: REGIME_COLOR[macro.regime], verticalAlign:"middle", lineHeight:1 }}>★</span>
                     )}
-                  </td>
-                  <td style={{ padding:"10px 14px", color:S.txt2, fontSize:"12px", fontFamily:S.sans, whiteSpace:"nowrap" }}>
+                  </td>}
+                  {visibleCols.has("name") && <td style={{ padding:"10px 14px", color:S.txt2, fontSize:"12px", fontFamily:S.sans, whiteSpace:"nowrap" }}>
                     {stock.name}
-                  </td>
+                  </td>}
                   {/* Price + return columns */}
-                  {["price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"].map(field => {
+                  {["price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"].filter(f=>visibleCols.has(f)).map(field => {
                     const pd = priceData[stock.ticker];
                     const live = livePrice[stock.ticker];
                     // Use live price for current price and daily change
@@ -1112,7 +1135,7 @@ function StockTracker() {
                     }
                     const isPrice = field === "price";
                     return (
-                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.mono, fontSize:"12px", color: isPrice ? "#cbd5e1" : pctColor(val) }}>
+                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.sans, fontSize:"12px", color: isPrice ? "#cbd5e1" : pctColor(val) }}>
                         {pd === undefined ? <span style={{color:S.dim2,fontSize:"10px"}}>…</span>
                           : val === null || val === undefined ? "—"
                           : isPrice ? (<>
@@ -1125,10 +1148,10 @@ function StockTracker() {
                     );
                   })}
                   {/* 5Y sparkline */}
-                  <td style={{ padding:"4px 14px 4px 8px", verticalAlign:"middle" }}>
+                  {visibleCols.has("spark") && <td style={{ padding:"4px 14px 4px 8px", verticalAlign:"middle" }}>
                     <Spark points={priceData[stock.ticker]?.spark} pct={priceData[stock.ticker]?.fiveyPct} />
-                  </td>
-                  <td style={{ padding:"7px 14px" }}>
+                  </td>}
+                  {visibleCols.has("tags") && <td style={{ padding:"7px 14px" }}>
                     <div style={{ display:"flex", flexWrap:"wrap", gap:"4px" }}>
                       {stock.tags.map(tag => {
                         const color  = TAG_COLORS[tag] || "#6b7280";
@@ -1142,16 +1165,16 @@ function StockTracker() {
                         );
                       })}
                     </div>
-                  </td>
-                  <td style={{ padding:"7px 14px", whiteSpace:"nowrap" }}>
+                  </td>}
+                  {visibleCols.has("acct") && <td style={{ padding:"7px 14px", whiteSpace:"nowrap" }}>
                     <span style={{ background:`${acctColor}18`, border:`1px solid ${acctColor}45`, color:acctColor, padding:"2px 8px", fontSize:"10px", fontFamily:S.sans, }}>{acctLabel}</span>
-                  </td>
+                  </td>}
                 </tr>
 
                 {/* ── Drawer ── */}
                 {isOpen && (
                   <tr key={`${stock.ticker}-drawer`}>
-                    <td colSpan={11} style={{ padding:"0", borderBottom:"1px solid #0d1520" }}>
+                    <td colSpan={visibleCols.size} style={{ padding:"0", borderBottom:"1px solid #0d1520" }}>
                       <div style={{ background:"#0a1520", borderLeft:"2px solid #38bdf8", margin:"0 0 0 44px", padding:"14px 20px 16px" }}>
 
                         {/* Thesis */}
@@ -1169,7 +1192,7 @@ function StockTracker() {
                           {getEn(_th) ? (
                             <div>
                               <span style={{ fontSize:"10px", color:S.dim, fontWeight:600, letterSpacing:"0.06em", display:"block", marginBottom:"4px" }}>TARGET ENTRY ZONE</span>
-                              <span style={{ fontSize:"15px", fontWeight:700, color:S.grn, fontFamily:S.mono }}>
+                              <span style={{ fontSize:"15px", fontWeight:700, color:S.grn, fontFamily:S.sans }}>
                                 ${getEn(_th)[0].toLocaleString()} – ${getEn(_th)[1].toLocaleString()}
                               </span>
                             </div>
