@@ -1,84 +1,1037 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoamLark — Track Your Travels</title><meta name="description" content="How many countries have you been to? Track your travels with UN, FIFA, Olympic, and TCC definitions. Share your map, compare with friends."><meta property="og:title" content="RoamLark — How Many Countries Have You Been To?"><meta property="og:description" content="Track your travels across 330+ countries and territories. Toggle UN, FIFA, Olympic, and TCC definitions. Share your map with friends."><meta property="og:type" content="website"><meta property="og:url" content="https://roamlark.com"><meta property="og:image" content="https://roamlark.com/og-image.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="RoamLark — How Many Countries Have You Been To?"><meta name="twitter:description" content="Track your travels across 330+ countries and territories. Share your map, compare with friends."><meta name="twitter:image" content="https://roamlark.com/og-image.png"><meta name="theme-color" content="#059669"><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cellipse cx='50' cy='60' rx='30' ry='24' fill='%23c4a574'/%3E%3Cellipse cx='50' cy='68' rx='22' ry='17' fill='%23faf5eb'/%3E%3Ccircle cx='58' cy='35' r='16' fill='%23c4a574'/%3E%3Cpath d='M44 28Q42 35 44 42Q48 50 58 50Q68 50 72 42Q74 35 72 28Q65 32 58 32Q51 32 44 28Z' fill='%23f5d44b'/%3E%3Cpath d='M44 28Q50 22 58 22Q66 22 72 28Q65 32 58 32Q51 32 44 28Z' fill='%23c4a574'/%3E%3Cpath d='M74 34Q68 34 64 34Q58 35 54 38Q50 42 48 48' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='64' cy='33' r='2.5' fill='%231a1a1a'/%3E%3Cpath d='M72 32L80 35L72 38Z' fill='%235c5040'/%3E%3Cpath d='M48 24Q46 18 44 13' stroke='%231a1a1a' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3Cpath d='M53 23Q55 17 57 13' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3C/svg%3E"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans','Segoe UI',sans-serif;background:#f0f4f8;color:#1e293b;overflow:hidden;height:100vh}.wrap{display:flex;height:100vh;width:100%}.sb{width:340px;min-width:340px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden;transition:all .3s ease;z-index:1000;box-shadow:4px 0 24px rgba(0,0,0,.04)}.sb.closed{width:0;min-width:0}.sb-head{padding:18px 18px 14px;border-bottom:1px solid #e2e8f0}.drag-handle{display:none}.sb-head h1{font-size:22px;font-weight:800;font-family:Nunito,sans-serif;letter-spacing:-.01em}.sb-head h1 span{color:#059669}.sb-sub{font-size:10px;color:#94a3b8;margin-top:2px;letter-spacing:.1em;font-weight:600}.counter-box{background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border-radius:14px;padding:14px 16px;border:1px solid rgba(5,150,105,.2);margin-top:12px}.counter-num{font-size:40px;font-weight:800;font-family:Nunito,sans-serif;color:#059669;line-height:1}.counter-of{font-size:15px;color:#64748b;font-weight:500}.counter-pct{font-size:20px;font-weight:800;font-family:Nunito,sans-serif;color:#059669}.progress{height:6px;background:rgba(5,150,105,.1);border-radius:3px;overflow:hidden;margin-top:8px}.progress-bar{height:100%;background:linear-gradient(90deg,#059669,#10b981);border-radius:3px;transition:width .5s}.sb-scroll{flex:1;overflow-y:auto;padding:12px 0}.sec-label{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.12em;margin-bottom:6px;padding:0 18px}.divider{height:1px;background:#e2e8f0;margin:0 18px}.presets{display:flex;flex-wrap:wrap;gap:4px;padding:0 18px 10px}.preset-btn{padding:5px 10px;font-size:11px;font-weight:600;border-radius:7px;border:1px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;font-family:inherit;transition:all .15s}.preset-btn.active{border-color:#059669;background:#ecfdf5;color:#059669}.toggle-section{padding:10px 18px}.toggle-row{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;background:0 0;border:none;border-radius:8px;cursor:pointer;margin-bottom:2px;text-align:left;font-family:inherit}.toggle-row:hover{background:#f8fafc}.toggle-check{width:16px;height:16px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0;transition:all .15s;border:1.5px solid #cbd5e1}.toggle-check.on{border:none}.toggle-label{font-size:12.5px;color:#64748b;font-weight:500;flex:1}.toggle-row.on .toggle-label{color:#1e293b;font-weight:600}.toggle-count{font-size:10.5px;color:#94a3b8;font-family:Nunito,sans-serif;font-weight:500}.expand-btn{background:0 0;border:none;color:#94a3b8;cursor:pointer;font-size:13px;padding:2px 6px;font-weight:600}.country-list{max-height:200px;overflow-y:auto;margin:4px 0 6px;border-radius:8px;border:1px solid #e2e8f0;background:#fff}.country-item{display:flex;align-items:center;gap:7px;width:100%;padding:5px 10px;background:#fff;border:none;border-bottom:1px solid #f1f5f9;cursor:pointer;text-align:left;font-size:11.5px;font-family:inherit;transition:background .1s}.country-item:hover{background:#f8fafc}.country-item.tag-been,.country-item.visited{background:#ecfdf5}.country-item.tag-want{background:#eff6ff}.country-item.tag-live{background:#fffbeb}.country-item.tag-lived{background:#fff7ed}.mini-check{width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0;border:1.5px solid #cbd5e1;background:#fff}.mini-check.on{border:none}.tag-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:auto;flex-shrink:0;font-family:Nunito,sans-serif}.more-btn{font-size:14px;color:#94a3b8;padding:0 4px;cursor:pointer;flex-shrink:0;line-height:1;letter-spacing:-1px}.more-btn:hover{color:#64748b}.inline-tag-picker{display:flex;gap:4px;padding:4px 10px 6px;background:#f8fafc;border-bottom:1px solid #e2e8f0;align-items:center;flex-wrap:wrap}.country-name{flex:1}.list-toggle{font-size:10px;color:#059669;background:0 0;border:none;cursor:pointer;padding:2px 9px 4px 33px;font-weight:600;font-family:inherit}.list-toggle:hover{text-decoration:underline}.sub-area{margin-left:22px;padding:6px 0 4px;border-left:2px solid #e2e8f0;padding-left:12px}.sub-toggle{display:flex;align-items:center;gap:7px;width:100%;padding:4px 6px;background:0 0;border:none;border-radius:5px;cursor:pointer;text-align:left;font-family:inherit}.sub-check{width:13px;height:13px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:700;flex-shrink:0;border:1.5px solid #d1d5db;background:#fff}.sub-check.on{background:#f97316;border:none}.sub-label{font-size:11.5px;color:#94a3b8;font-weight:400;flex:1}.sub-toggle.on .sub-label{color:#1e293b;font-weight:500}.sub-count{font-size:10px;color:#cbd5e1;font-family:Nunito,sans-serif}.select-all{font-size:10px;color:#059669;background:0 0;border:none;cursor:pointer;padding:2px 0;margin-bottom:4px;font-weight:600;font-family:inherit}.search-box{width:100%;padding:8px 12px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;font-size:13px;outline:0;font-family:inherit}.search-box:focus{border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.08)}.stat-card{margin-bottom:8px;background:#f8fafc;border-radius:10px;padding:10px 12px;border:1px solid #e2e8f0}.stat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.stat-cont{font-size:12.5px;font-weight:600}.stat-nums{font-size:11px;font-family:Nunito,sans-serif;color:#64748b}.stat-pct{font-size:12px;font-weight:700;font-family:Nunito,sans-serif;padding:2px 7px;border-radius:6px;margin-left:6px}.stat-bar{height:5px;border-radius:3px;overflow:hidden}.stat-bar-fill{height:100%;border-radius:3px;transition:width .4s}.map-area{flex:1;position:relative;overflow:hidden;background:#e8eef6}#map{width:100%;height:100%;z-index:1}.map-overlay{position:absolute;top:16px;right:16px;z-index:1000;background:rgba(255,255,255,.92);border-radius:14px;padding:12px 20px;border:1px solid #e2e8f0;backdrop-filter:blur(12px);text-align:right;box-shadow:0 4px 20px rgba(0,0,0,.06)}.open-btn{position:absolute;top:16px;left:16px;z-index:1000;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;color:#1e293b;cursor:pointer;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.08);font-weight:600;font-family:inherit;display:none}.open-btn.hidden{display:none}.open-btn.show{display:block}.peek-bar{display:none}.map-label{background:0 0!important;border:none!important;box-shadow:none!important}.leaflet-tooltip{font-family:'DM Sans',sans-serif!important;font-size:13px!important;border-radius:8px!important;padding:8px 12px!important;box-shadow:0 4px 12px rgba(0,0,0,.1)!important;border:1px solid #e2e8f0!important}.tag-popup .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:0 8px 24px rgba(0,0,0,.15)!important;padding:4px!important}.tag-popup .leaflet-popup-content{margin:10px 12px!important}.tag-popup .leaflet-popup-close-button{font-size:18px!important;color:#94a3b8!important;right:6px!important;top:4px!important}body.dark{background:#0f172a;color:#e2e8f0}body.dark .sb{background:#1e293b;border-color:#334155}body.dark .sb-head{border-color:#334155}body.dark .counter-box{background:linear-gradient(135deg,#064e3b,#065f46);border-color:rgba(5,150,105,.3)}body.dark .counter-of{color:#94a3b8}body.dark .divider{background:#334155}body.dark .toggle-row:hover{background:#334155}body.dark .toggle-label{color:#94a3b8}body.dark .toggle-row.on .toggle-label{color:#e2e8f0}body.dark .toggle-check{border-color:#475569}body.dark .toggle-count{color:#64748b}body.dark .preset-btn{background:#1e293b;border-color:#334155;color:#94a3b8}body.dark .preset-btn.active{background:#064e3b;border-color:#059669;color:#34d399}body.dark .search-box{background:#0f172a;border-color:#334155;color:#e2e8f0}body.dark .search-box:focus{border-color:#059669}body.dark .country-list{border-color:#334155;background:#1e293b}body.dark .country-item{background:#1e293b;border-color:#334155}body.dark .country-item span{color:#e2e8f0!important}body.dark .country-item:hover{background:#334155}body.dark .country-item.tag-been,body.dark .country-item.visited{background:#064e3b}body.dark .country-item.tag-want{background:#1e3a5f}body.dark .country-item.tag-live{background:#422006}body.dark .country-item.tag-lived{background:#431407}body.dark .mini-check{border-color:#475569;background:#0f172a}body.dark .more-btn{color:#64748b}body.dark .inline-tag-picker{background:#0f172a;border-color:#334155}body.dark .peek-bar{color:#34d399}body.dark .sb.closed .drag-handle::after{background:#34d399}body.dark .sub-area{border-color:#334155}body.dark .sub-check{border-color:#475569;background:#0f172a}body.dark .sub-label{color:#64748b}body.dark .sub-toggle.on .sub-label{color:#e2e8f0}body.dark .stat-card{background:#0f172a;border-color:#334155}body.dark .stat-nums{color:#94a3b8}body.dark .stat-bar{background:#334155!important}body.dark .map-area{background:#0f172a}body.dark .map-overlay{background:rgba(15,23,42,.92);border-color:#334155}body.dark #sharedBanner{background:#1e293b;border-color:#334155;color:#e2e8f0}body.dark #sharedBanner div:first-child{color:#e2e8f0}body.dark .open-btn{background:#1e293b;border-color:#334155;color:#e2e8f0}body.dark .badge{background:#0f172a;border-color:#334155;color:#64748b}body.dark .badge.earned{background:linear-gradient(135deg,#422006,#451a03);border-color:#b45309;color:#fbbf24}body.dark .list-toggle{color:#34d399}body.dark .sec-label{color:#64748b}body.dark .select-all{color:#34d399}body.dark .leaflet-container{background:#0f172a!important}body.dark #authGate{background:linear-gradient(135deg,#0f172a,#1e293b)}body.dark #authGate h1{color:#e2e8f0}body.dark #authGate p{color:#64748b}body.dark #authInput{background:#1e293b;border-color:#334155;color:#e2e8f0}body.dark .sb-scroll button[onclick*="toggleExpand('un_"]{background:#1e293b!important}.achievements{display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 10px}.badge{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;border:1px solid #e2e8f0;background:#f8fafc;color:#94a3b8;transition:all .3s}.badge.earned{background:linear-gradient(135deg,#fef9c3,#fef3c7);border-color:#f59e0b;color:#92400e;box-shadow:0 1px 4px rgba(245,158,11,.2)}.badge .icon{font-size:14px}.badge.earned .icon{animation:badgePop .4s ease}@keyframes badgePop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}@media(max-width:768px){.wrap{flex-direction:column}.sb{width:100%!important;min-width:100%!important;height:65vh;position:fixed;bottom:0;left:0;right:0;z-index:2000;border-right:none;border-top:2px solid #e2e8f0;border-radius:18px 18px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.1);transition:transform .3s ease}.sb.closed{transform:translateY(calc(100% - 48px))}.sb-head{padding:12px 16px 10px}.sb-head h1{font-size:17px}.counter-box{padding:8px 12px;margin-top:6px}.counter-num{font-size:26px!important}.counter-pct{font-size:14px!important}.counter-box .progress{margin-top:4px}.counter-box #tagBreakdown{margin-top:4px;font-size:10px!important}.counter-box div[style*="display:flex;gap:6px"]{margin-top:6px!important}.counter-num{font-size:32px}.counter-pct{font-size:17px}.map-area{height:100vh;width:100%}.map-overlay{top:10px;right:10px;padding:8px 14px}.map-overlay span[style*="font-size:32px"]{font-size:24px!important}.open-btn{display:none!important}.drag-handle{display:block;width:100%;padding:8px 0;cursor:pointer}.drag-handle::after{content:'';display:block;width:40px;height:4px;background:#cbd5e1;border-radius:2px;margin:0 auto}.sb.closed .drag-handle::after{background:#059669}.sb.closed .sb-head{pointer-events:auto}.sb.closed .sb-scroll{display:none}.sb.closed .sb-head>:not(.drag-handle):not(.peek-bar){display:none!important}.sb.closed .peek-bar{display:flex!important}.peek-bar{display:none;align-items:center;justify-content:center;gap:8px;padding:2px 0 4px;cursor:pointer;font-family:Nunito,sans-serif;font-size:13px;font-weight:700;color:#059669}.presets{gap:3px}.preset-btn{padding:4px 8px;font-size:10px}.toggle-section{padding:8px 14px}.sec-label{padding:0 14px}.divider{margin:0 14px}.leaflet-control-zoom{margin-bottom:60px!important}}</style></head><body><div id="authGate" style="display:flex;align-items:center;justify-content:center;height:100vh;width:100%;background:linear-gradient(135deg,#f0f4f8,#e8eef6);font-family:'DM Sans','Segoe UI',sans-serif"><div style="text-align:center;max-width:400px;padding:40px"><h1 style="font-size:32px;font-weight:800;font-family:Nunito,sans-serif;margin-bottom:4px"><span style="color:#059669">Roam</span>Lark <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style="vertical-align:middle" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="60" rx="30" ry="24" fill="#c4a574"/><ellipse cx="50" cy="68" rx="22" ry="17" fill="#faf5eb"/><ellipse cx="52" cy="55" rx="14" ry="9" fill="#f5d44b" opacity="0.3"/><path d="M30 52 Q20 46 15 56 Q20 64 35 67 Q30 57 30 52Z" fill="#8B7355"/><circle cx="58" cy="35" r="16" fill="#c4a574"/><path d="M44 28 Q42 35 44 42 Q48 50 58 50 Q68 50 72 42 Q74 35 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#f5d44b"/><path d="M44 28 Q50 22 58 22 Q66 22 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#c4a574"/><path d="M74 34 Q68 34 64 34 Q58 35 54 38 Q50 42 48 48" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="64" cy="33" r="2.5" fill="#1a1a1a"/><circle cx="64.5" cy="32.5" r="0.8" fill="white"/><path d="M72 32 L80 35 L72 38Z" fill="#5c5040"/><path d="M48 24 Q46 18 44 13" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M53 23 Q55 17 57 13" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M20 58 Q12 52 8 48" stroke="#8B7355" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M20 60 Q14 56 10 54" stroke="#a08660" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg></h1><p style="font-size:14px;color:#64748b;margin-bottom:8px;font-weight:500">Track every country you've visited.</p><p style="font-size:12px;color:#94a3b8;margin-bottom:28px;line-height:1.5">Mark countries as Been, Want, Live, or Lived.<br>Toggle UN, FIFA, Olympic, and TCC definitions. Share your map.</p><button onclick="enterApp()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#059669;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif;transition:background .15s;letter-spacing:.02em" onmouseover='this.style.background="#047857"' onmouseout='this.style.background="#059669"'>Start Tracking →</button><p style="font-size:11px;color:#cbd5e1;margin-top:16px">Free to use · No account needed · Progress saves automatically</p></div></div><div id="emailModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:5000;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif"><div style="background:#fff;border-radius:16px;padding:32px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)"><div style="margin-bottom:8px"><svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="60" rx="30" ry="24" fill="#c4a574"/><ellipse cx="50" cy="68" rx="22" ry="17" fill="#faf5eb"/><ellipse cx="52" cy="55" rx="14" ry="9" fill="#f5d44b" opacity="0.3"/><path d="M30 52 Q20 46 15 56 Q20 64 35 67 Q30 57 30 52Z" fill="#8B7355"/><path d="M32 54 Q24 49 20 57 Q24 63 34 65" fill="#a08660" opacity="0.6"/><circle cx="58" cy="35" r="16" fill="#c4a574"/><path d="M44 28 Q42 35 44 42 Q48 50 58 50 Q68 50 72 42 Q74 35 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#f5d44b"/><path d="M44 28 Q50 22 58 22 Q66 22 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#c4a574"/><path d="M74 34 Q68 34 64 34 Q58 35 54 38 Q50 42 48 48" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="64" cy="33" r="2.5" fill="#1a1a1a"/><circle cx="64.5" cy="32.5" r="0.8" fill="white"/><path d="M72 32 L80 35 L72 38Z" fill="#5c5040"/><path d="M48 24 Q46 18 44 13" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M53 23 Q55 17 57 13" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M20 58 Q12 52 8 48" stroke="#8B7355" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M20 60 Q14 56 10 54" stroke="#a08660" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M42 82 L40 92 M42 82 L38 90 M42 82 L44 91" stroke="#8B7355" stroke-width="1.5" stroke-linecap="round"/><path d="M56 82 L54 92 M56 82 L52 90 M56 82 L58 91" stroke="#8B7355" stroke-width="1.5" stroke-linecap="round"/></svg></div><h2 style="font-size:20px;font-weight:800;font-family:Nunito,sans-serif;margin:0 0 6px" id="emailTitle">Nice exploring!</h2><p style="font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5" id="emailDesc">Get notified when we launch trip logging, friend comparisons, and shareable travel cards.</p><input id="emailInput" type="email" placeholder="your@email.com" style="width:100%;padding:12px 16px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;font-size:14px;font-family:inherit;outline:0;text-align:center;box-sizing:border-box;margin-bottom:8px"> <button onclick="captureEmail()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#059669;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif">Keep Me Posted</button> <button onclick="closeEmailModal()" style="background:0 0;border:none;color:#94a3b8;font-size:12px;cursor:pointer;margin-top:10px;font-family:inherit">Maybe later</button></div></div><div class="wrap" id="appWrap" style="display:none"><div class="sb" id="sidebar"><div class="sb-head"><div class="drag-handle" onclick="window.innerWidth<=768&&toggleSidebar()"></div><div class="peek-bar" onclick="toggleSidebar()"><svg width="16" height="16" viewBox="0 0 100 100" fill="none" style="vertical-align:middle" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="60" rx="30" ry="24" fill="#c4a574"/><ellipse cx="50" cy="68" rx="22" ry="17" fill="#faf5eb"/><circle cx="58" cy="35" r="16" fill="#c4a574"/><path d="M44 28 Q42 35 44 42 Q48 50 58 50 Q68 50 72 42 Q74 35 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#f5d44b"/><path d="M44 28 Q50 22 58 22 Q66 22 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#c4a574"/><path d="M74 34 Q64 34 54 38 Q50 42 48 48" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="64" cy="33" r="3" fill="#1a1a1a"/><path d="M72 32 L80 35 L72 38Z" fill="#5c5040"/></svg> <span id="peekLabel">RoamLark — Tap to open</span></div><div style="display:flex;align-items:center;justify-content:space-between"><div><h1><span>Roam</span>Lark <svg width="22" height="22" viewBox="0 0 100 100" fill="none" style="vertical-align:middle" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="60" rx="30" ry="24" fill="#c4a574"/><ellipse cx="50" cy="68" rx="22" ry="17" fill="#faf5eb"/><circle cx="58" cy="35" r="16" fill="#c4a574"/><path d="M44 28 Q42 35 44 42 Q48 50 58 50 Q68 50 72 42 Q74 35 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#f5d44b"/><path d="M44 28 Q50 22 58 22 Q66 22 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#c4a574"/><path d="M74 34 Q68 34 64 34 Q58 35 54 38 Q50 42 48 48" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="64" cy="33" r="2.5" fill="#1a1a1a"/><circle cx="64.5" cy="32.5" r="0.8" fill="white"/><path d="M72 32 L80 35 L72 38Z" fill="#5c5040"/><path d="M48 24 Q46 18 44 13" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M53 23 Q55 17 57 13" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/></svg></h1><div class="sb-sub">YOUR TRAVEL TRACKER</div></div><div style="display:flex;gap:4px"><button onclick="toggleDark()" id="darkBtn" style="background:#f1f5f9;border:none;color:#64748b;cursor:pointer;font-size:14px;padding:6px 8px;border-radius:6px" title="Toggle dark mode">☀️</button> <button onclick="toggleSidebar()" style="background:#f1f5f9;border:none;color:#64748b;cursor:pointer;font-size:14px;padding:6px 8px;border-radius:6px">✕</button></div></div><div class="counter-box"><div style="display:flex;align-items:baseline;gap:5px"><span class="counter-num" id="visitCount">0</span> <span class="counter-of">/ <span id="totalCount">193</span></span> <span class="counter-pct" style="margin-left:auto" id="totalPct">0%</span></div><div class="progress"><div class="progress-bar" id="totalBar" style="width:0%"></div></div><div id="tagBreakdown" style="display:flex;gap:10px;margin-top:8px;font-size:11px;font-family:Nunito,sans-serif;font-weight:600"></div><div style="display:flex;gap:6px;margin-top:10px"><button onclick="shareMap()" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(5,150,105,.3);background:0 0;color:#059669;font-size:11px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif;transition:all .15s" onmouseover='this.style.background="rgba(5,150,105,.1)"' onmouseout='this.style.background="transparent"'>📤 Share Link</button> <button onclick="generateShareCard()" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:0 0;color:#3b82f6;font-size:11px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif;transition:all .15s" onmouseover='this.style.background="rgba(59,130,246,.1)"' onmouseout='this.style.background="transparent"'>🖼️ Share Card</button></div><button onclick="showCompareModal()" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid rgba(168,85,247,.3);background:0 0;color:#a855f7;font-size:11px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif;transition:all .15s" onmouseover='this.style.background="rgba(168,85,247,.1)"' onmouseout='this.style.background="transparent"'>🔀 Compare with a Friend</button></div></div><div class="sb-scroll"><div style="padding:0 18px 10px;margin-top:12px"><div class="sec-label">PRESETS</div><div class="presets" id="presetArea"></div></div><div class="divider"></div><div style="padding:10px 18px"><div class="sec-label">ACHIEVEMENTS</div><div class="achievements" id="achieveArea"></div></div><div class="divider"></div><div class="toggle-section" id="toggleArea"></div><div class="divider"></div><div style="padding:10px 18px"><div class="sec-label">SEARCH</div><input class="search-box" id="searchBox" placeholder="Type a country name..." oninput="doSearch()"><div id="searchResults"></div></div><div class="divider"></div><div style="padding:10px 18px"><button onclick="toggleStats()" style="display:flex;align-items:center;gap:6px;background:0 0;border:none;color:#94a3b8;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.1em;padding:0;font-family:inherit"><span id="statsArrow">▾</span> STATS BY CONTINENT</button><div id="statsArea" style="margin-top:10px"></div></div></div></div><div class="map-area"><button class="open-btn" id="openBtn" onclick="toggleSidebar()"><svg width="16" height="16" viewBox="0 0 100 100" fill="none" style="vertical-align:middle;margin-right:2px" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="60" rx="30" ry="24" fill="#c4a574"/><ellipse cx="50" cy="68" rx="22" ry="17" fill="#faf5eb"/><circle cx="58" cy="35" r="16" fill="#c4a574"/><path d="M44 28 Q42 35 44 42 Q48 50 58 50 Q68 50 72 42 Q74 35 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#f5d44b"/><path d="M44 28 Q50 22 58 22 Q66 22 72 28 Q65 32 58 32 Q51 32 44 28Z" fill="#c4a574"/><path d="M74 34 Q64 34 54 38 Q50 42 48 48" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="64" cy="33" r="3" fill="#1a1a1a"/><path d="M72 32 L80 35 L72 38Z" fill="#5c5040"/></svg> RoamLark</button><div class="map-overlay"><div style="font-size:11px;color:#94a3b8;font-weight:600;letter-spacing:.04em;margin-bottom:2px" id="presetLabel">Strict UN (193)</div><div style="display:flex;align-items:baseline;gap:5px;justify-content:flex-end"><span style="font-size:32px;font-weight:800;font-family:Nunito,sans-serif;color:#059669;line-height:1" id="mapCount">0</span> <span style="font-size:15px;color:#94a3b8;font-weight:500">/ <span id="mapTotal">193</span></span></div><div style="display:flex;gap:8px;margin-top:6px;font-size:9px;font-weight:700;font-family:Nunito,sans-serif;justify-content:flex-end"><span style="color:#059669">● Been</span> <span style="color:#3b82f6">● Want</span> <span style="color:#f59e0b">● Live</span> <span style="color:#f97316">● Lived</span></div></div><div id="sharedBanner" style="display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:1001;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 16px;box-shadow:0 4px 20px rgba(0,0,0,.12);font-family:Nunito,sans-serif;text-align:center;max-width:340px;width:90%"><div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px">👀 Viewing a shared map</div><div style="display:flex;gap:6px;justify-content:center"><button onclick="switchToMyMap()" style="padding:6px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">View My Map</button> <button onclick="mergeSharedMap()" style="padding:6px 14px;border-radius:8px;border:none;background:#059669;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Add to My Map</button></div></div><div id="map"></div></div></div><script>let emailCaptured=JSON.parse(localStorage.getItem("rl_email_captured")||"false"),emailDismissed=JSON.parse(localStorage.getItem("rl_email_dismissed")||"0");function enterApp(){document.getElementById("authGate").style.display="none",document.getElementById("appWrap").style.display="flex",setTimeout(()=>{map&&map.invalidateSize()},100)}function checkEmailPrompt(){if(emailCaptured)return;const v=[...state.tags.values()].filter(t=>"want"!==t).length,lastDismissed=parseInt(emailDismissed)||0,nextMilestone=[3,10,25,50].find(m=>m>lastDismissed);if(nextMilestone&&v>=nextMilestone){const msgs={3:{t:"Nice exploring!",d:"Get notified when we launch trip logging, friend comparisons, and shareable travel cards."},10:{t:"10 countries! 🎉",d:"You're a real explorer. Join the waitlist for premium features — we're building something special."},25:{t:"You're unstoppable!",d:"25+ countries is serious. We're building features just for travelers like you. Don't miss the launch."},50:{t:"Legend status 🏆",d:"50 countries puts you in rare company. Be the first to know when we launch sharing, stats, and more."}},m=msgs[nextMilestone]||msgs[3];document.getElementById("emailTitle").textContent=m.t,document.getElementById("emailDesc").textContent=m.d,document.getElementById("emailModal").style.display="flex"}}function captureEmail(){const email=document.getElementById("emailInput").value;email&&email.includes("@")&&email.includes(".")&&(sendToConvertKit(email),localStorage.setItem("rl_email_captured","true"),emailCaptured=!0,closeEmailModal(),showToast("You're on the list!"))}function closeEmailModal(){document.getElementById("emailModal").style.display="none",emailDismissed=String(state.tags.size),localStorage.setItem("rl_email_dismissed",emailDismissed)}function sendToConvertKit(email){fetch("https://api.convertkit.com/v3/forms/9135142/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({api_key:"spZoukQ7fURspmDha-66eQ",email:email,fields:{countries_visited:String(state.tags.size)}})}).catch(()=>{})}function shareMap(){const TAG_SHORT={been:"b",want:"w",live:"l",lived:"v"},pairs=[];state.tags.forEach((tag,name)=>{const idx=DATA.findIndex(d=>d.n===name);idx>=0&&pairs.push(idx+TAG_SHORT[tag])}),pairs.sort((a,b)=>parseInt(a)-parseInt(b));const url=window.location.origin+window.location.pathname+"#m="+pairs.join(",");navigator.clipboard?navigator.clipboard.writeText(url).then(()=>{showToast("Link copied! Share it with friends")}):prompt("Copy this link:",url)}let viewingShared=!1,sharedTags=null;function loadFromURL(){const hash=window.location.hash,SHORT_TAG={b:"been",w:"want",l:"live",v:"lived"};if(hash.startsWith("#m="))try{sharedTags=new Map,hash.substring(3).split(",").forEach(p=>{const match=p.match(/^(\d+)([bwlv]?)$/);if(match){const idx=parseInt(match[1]),tag=match[2]?SHORT_TAG[match[2]]:"been";idx>=0&&idx<DATA.length&&sharedTags.set(DATA[idx].n,tag)}}),sharedTags.size>0&&(viewingShared=!0,state.savedTags=new Map(state.tags),state.tags=new Map(sharedTags))}catch(e){}else if(hash.startsWith("#v="))try{sharedTags=new Map;const encoded=decodeURIComponent(hash.substring(3)),visited=JSON.parse(atob(encoded));Array.isArray(visited)&&(visited.forEach(v=>sharedTags.set(v,"been")),sharedTags.size>0&&(viewingShared=!0,state.savedTags=new Map(state.tags),state.tags=new Map(sharedTags)))}catch(e){}}function switchToMyMap(){viewingShared=!1,state.tags=new Map(state.savedTags),window.location.hash="",document.getElementById("sharedBanner").style.display="none",render(),updateMap()}function mergeSharedMap(){viewingShared=!1,sharedTags.forEach((tag,name)=>{state.savedTags.has(name)||state.savedTags.set(name,tag)}),state.tags=new Map(state.savedTags),localStorage.setItem("rl_tags",JSON.stringify([...state.tags.entries()])),window.location.hash="",document.getElementById("sharedBanner").style.display="none",render(),updateMap(),showToast("Countries added to your map!")}function drawLarkOnCanvas(ctx,cx,cy,s){const sc=s/100;ctx.save(),ctx.translate(cx-s/2,cy-s/2),ctx.scale(sc,sc),ctx.fillStyle="#c4a574",ctx.beginPath(),ctx.ellipse(50,60,30,24,0,0,2*Math.PI),ctx.fill(),ctx.fillStyle="#faf5eb",ctx.beginPath(),ctx.ellipse(50,68,22,17,0,0,2*Math.PI),ctx.fill(),ctx.fillStyle="rgba(245,212,75,0.3)",ctx.beginPath(),ctx.ellipse(52,55,14,9,0,0,2*Math.PI),ctx.fill(),ctx.fillStyle="#8B7355",ctx.beginPath(),ctx.moveTo(30,52),ctx.quadraticCurveTo(20,46,15,56),ctx.quadraticCurveTo(20,64,35,67),ctx.quadraticCurveTo(30,57,30,52),ctx.fill(),ctx.fillStyle="#c4a574",ctx.beginPath(),ctx.arc(58,35,16,0,2*Math.PI),ctx.fill(),ctx.fillStyle="#f5d44b",ctx.beginPath(),ctx.moveTo(44,28),ctx.quadraticCurveTo(42,35,44,42),ctx.quadraticCurveTo(48,50,58,50),ctx.quadraticCurveTo(68,50,72,42),ctx.quadraticCurveTo(74,35,72,28),ctx.quadraticCurveTo(65,32,58,32),ctx.quadraticCurveTo(51,32,44,28),ctx.fill(),ctx.fillStyle="#c4a574",ctx.beginPath(),ctx.moveTo(44,28),ctx.quadraticCurveTo(50,22,58,22),ctx.quadraticCurveTo(66,22,72,28),ctx.quadraticCurveTo(65,32,58,32),ctx.quadraticCurveTo(51,32,44,28),ctx.fill(),ctx.strokeStyle="#1a1a1a",ctx.lineWidth=2,ctx.lineCap="round",ctx.beginPath(),ctx.moveTo(74,34),ctx.quadraticCurveTo(68,34,64,34),ctx.quadraticCurveTo(58,35,54,38),ctx.quadraticCurveTo(50,42,48,48),ctx.stroke(),ctx.fillStyle="#1a1a1a",ctx.beginPath(),ctx.arc(64,33,2.5,0,2*Math.PI),ctx.fill(),ctx.fillStyle="white",ctx.beginPath(),ctx.arc(64.5,32.5,.8,0,2*Math.PI),ctx.fill(),ctx.fillStyle="#5c5040",ctx.beginPath(),ctx.moveTo(72,32),ctx.lineTo(80,35),ctx.lineTo(72,38),ctx.fill(),ctx.strokeStyle="#1a1a1a",ctx.lineWidth=2.5,ctx.beginPath(),ctx.moveTo(48,24),ctx.quadraticCurveTo(46,18,44,13),ctx.stroke(),ctx.lineWidth=2,ctx.beginPath(),ctx.moveTo(53,23),ctx.quadraticCurveTo(55,17,57,13),ctx.stroke(),ctx.strokeStyle="#8B7355",ctx.lineWidth=3,ctx.beginPath(),ctx.moveTo(20,58),ctx.quadraticCurveTo(12,52,8,48),ctx.stroke(),ctx.strokeStyle="#a08660",ctx.lineWidth=2.5,ctx.beginPath(),ctx.moveTo(20,60),ctx.quadraticCurveTo(14,56,10,54),ctx.stroke(),ctx.restore()}function generateShareCard(){const entries=getEntries(),activeNames=new Set(entries.map(e=>e.n)),total=entries.length,tagCounts={been:0,want:0,live:0,lived:0};state.tags.forEach((tag,name)=>{activeNames.has(name)&&tagCounts[tag]++});const vCount=tagCounts.been+tagCounts.live+tagCounts.lived,pct=total?Math.round(vCount/total*100):0,byC={};entries.forEach(e=>{byC[e.cont]||(byC[e.cont]={t:0,been:0,want:0,live:0,lived:0}),byC[e.cont].t++;const tag=state.tags.get(e.n);tag&&byC[e.cont][tag]++});const continents=Object.entries(byC).sort((a,b)=>b[1].t-a[1].t),W=1080,H=1350,c=document.createElement("canvas");c.width=W,c.height=H;const ctx=c.getContext("2d"),bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#0f2027"),bg.addColorStop(.5,"#203a43"),bg.addColorStop(1,"#2c5364"),ctx.fillStyle=bg,ctx.fillRect(0,0,W,H),ctx.globalAlpha=.03;for(let i=0;i<W;i+=60)for(let j=0;j<H;j+=60)ctx.fillStyle="#fff",ctx.beginPath(),ctx.arc(i,j,1.5,0,2*Math.PI),ctx.fill();ctx.globalAlpha=1;const accent=ctx.createLinearGradient(0,0,W,0);accent.addColorStop(0,"#059669"),accent.addColorStop(.5,"#3b82f6"),accent.addColorStop(1,"#f59e0b"),ctx.fillStyle=accent,ctx.fillRect(0,0,W,6),ctx.fillStyle="#fff",ctx.font="700 42px 'Nunito',sans-serif",ctx.textAlign="center",ctx.fillText("RoamLark",520,80),drawLarkOnCanvas(ctx,668,65,42),ctx.fillStyle="rgba(255,255,255,0.5)",ctx.font="600 20px 'Nunito',sans-serif",ctx.fillText("YOUR TRAVEL TRACKER",540,115),ctx.strokeStyle="rgba(255,255,255,0.15)",ctx.lineWidth=1,ctx.beginPath(),ctx.moveTo(100,145),ctx.lineTo(980,145),ctx.stroke(),ctx.fillStyle="#059669",ctx.font="800 180px 'Nunito',sans-serif",ctx.textAlign="center",ctx.fillText(String(vCount),540,320),ctx.fillStyle="rgba(255,255,255,0.6)",ctx.font="600 36px 'Nunito',sans-serif",ctx.fillText("/ "+total+" countries  ·  "+pct+"%",540,370);const activeTags=[{k:"been",icon:"✓",c:"#059669"},{k:"want",icon:"★",c:"#3b82f6"},{k:"live",icon:"⌂",c:"#f59e0b"},{k:"lived",icon:"◈",c:"#f97316"}].filter(t=>tagCounts[t.k]>0);if(activeTags.length){const tagW=200,gap=20;let tx=540-(activeTags.length*tagW+(activeTags.length-1)*gap)/2;const ty=420;activeTags.forEach(t=>{ctx.fillStyle=t.c+"25",ctx.beginPath(),ctx.roundRect(tx,ty-22,tagW,44,22),ctx.fill(),ctx.fillStyle=t.c,ctx.font="700 24px 'Nunito',sans-serif",ctx.textAlign="center",ctx.fillText(t.icon+" "+tagCounts[t.k]+" "+t.k,tx+tagW/2,ty+8),tx+=tagW+gap})}const CEMOJI={Africa:"🌍",Asia:"🌏",Europe:"🌍","North America":"🌎","South America":"🌎",Oceania:"🌏",Antarctica:"🧊"};let by=510;ctx.textAlign="left",continents.forEach(([cont,s])=>{const v=s.been+s.want+s.live+s.lived,p2=s.t?Math.round(v/s.t*100):0;ctx.fillStyle="rgba(255,255,255,0.9)",ctx.font="600 22px 'Nunito',sans-serif",ctx.fillText((CEMOJI[cont]||"")+" "+cont,120,by),ctx.textAlign="right",ctx.fillStyle="rgba(255,255,255,0.6)",ctx.font="600 20px 'Nunito',sans-serif",ctx.fillText(v+"/"+s.t+"  "+p2+"%",960,by),ctx.textAlign="left",by+=10,ctx.fillStyle="rgba(255,255,255,0.08)",ctx.beginPath(),ctx.roundRect(120,by,840,40,6),ctx.fill();let bx=120;const tagOrder=["been","lived","live","want"],tagColors={been:"#059669",want:"#3b82f6",live:"#f59e0b",lived:"#f97316"};tagOrder.forEach(tk=>{if(s[tk]>0){const w=Math.max(s[tk]/s.t*840,4);ctx.fillStyle=tagColors[tk],ctx.beginPath(),ctx.roundRect(bx,by,w,40,120===bx?[6,0,0,6]:[0,0,0,0]),ctx.fill(),bx+=w}}),bx=128,tagOrder.forEach(tk=>{if(s[tk]>0){const w=s[tk]/s.t*840;w>30&&(ctx.fillStyle="rgba(255,255,255,0.9)",ctx.font="700 16px 'Nunito',sans-serif",ctx.fillText(s[tk],bx,by+20+6)),bx+=w}}),by+=56}),ctx.strokeStyle="rgba(255,255,255,0.15)",ctx.lineWidth=1,ctx.beginPath(),ctx.moveTo(100,1220),ctx.lineTo(980,1220),ctx.stroke(),ctx.textAlign="center";const legItems=[{c:"#059669",l:"Been"},{c:"#3b82f6",l:"Want"},{c:"#f59e0b",l:"Live"},{c:"#f97316",l:"Lived"}];let lx=540-140*legItems.length/2;legItems.forEach(item=>{ctx.fillStyle=item.c,ctx.beginPath(),ctx.roundRect(lx,1247,16,16,3),ctx.fill(),ctx.fillStyle="rgba(255,255,255,0.7)",ctx.font="600 18px 'Nunito',sans-serif",ctx.textAlign="left",ctx.fillText(item.l,lx+24,1261),lx+=140}),ctx.textAlign="center",ctx.fillStyle="rgba(255,255,255,0.4)",ctx.font="500 22px 'Nunito',sans-serif",ctx.fillText("roamlark.com",540,1315),showShareCardModal(c.toDataURL("image/png"))}function showShareCardModal(dataUrl){let modal=document.getElementById("shareCardModal");modal||(modal=document.createElement("div"),modal.id="shareCardModal",Object.assign(modal.style,{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,.7)",zIndex:"9999",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px",backdropFilter:"blur(4px)"}),modal.innerHTML='<div style="background:#fff;border-radius:16px;padding:20px;max-width:400px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">\n      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">\n        <span style="font-weight:800;font-family:\'Nunito\',sans-serif;font-size:18px;color:#1e293b">Your Travel Card</span>\n        <button onclick="document.getElementById(\'shareCardModal\').style.display=\'none\'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8">✕</button>\n      </div>\n      <img id="shareCardImg" style="width:100%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12)"/>\n      <div style="display:flex;gap:8px;margin-top:14px">\n        <button id="shareCardDownload" style="flex:1;padding:10px;border-radius:10px;border:none;background:#059669;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Nunito\',sans-serif">⬇ Download</button>\n        <button id="shareCardNative" style="flex:1;padding:10px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Nunito\',sans-serif">📤 Share</button>\n      </div>\n    </div>',document.body.appendChild(modal),modal.addEventListener("click",e=>{e.target===modal&&(modal.style.display="none")})),document.getElementById("shareCardImg").src=dataUrl,modal.style.display="flex",document.getElementById("shareCardDownload").onclick=()=>{const a=document.createElement("a");a.download="roamlark-travel-card.png",a.href=dataUrl,a.click()},document.getElementById("shareCardNative").onclick=async()=>{try{const resp=await fetch(dataUrl),blob=await resp.blob(),file=new File([blob],"roamlark-travel-card.png",{type:"image/png"});navigator.canShare&&navigator.canShare({files:[file]})?await navigator.share({files:[file],title:"My RoamLark Travel Card",text:"Check out my travel stats! roamlark.com"}):(document.getElementById("shareCardDownload").click(),showToast("Image downloaded — share it manually!"))}catch(e){document.getElementById("shareCardDownload").click()}}}function showCompareModal(){let modal=document.getElementById("compareModal");modal||(modal=document.createElement("div"),modal.id="compareModal",Object.assign(modal.style,{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,.7)",zIndex:"9999",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px",backdropFilter:"blur(4px)"}),modal.innerHTML='<div style="background:#fff;border-radius:16px;padding:20px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">\n      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">\n        <span style="font-weight:800;font-family:\'Nunito\',sans-serif;font-size:18px;color:#1e293b">🔀 Compare Maps</span>\n        <button onclick="document.getElementById(\'compareModal\').style.display=\'none\'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8">✕</button>\n      </div>\n      <div id="compareInput">\n        <p style="font-size:12px;color:#64748b;margin:0 0 12px;line-height:1.5">Paste a friend\'s RoamLark share link to see how your travels compare.</p>\n        <input id="compareUrl" type="text" placeholder="Paste share link here..." style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;transition:border .2s" onfocus="this.style.borderColor=\'#a855f7\'" onblur="this.style.borderColor=\'#e2e8f0\'"/>\n        <button onclick="runComparison()" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:none;background:#a855f7;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Nunito\',sans-serif">Compare</button>\n      </div>\n      <div id="compareResults" style="display:none"></div>\n    </div>',document.body.appendChild(modal),modal.addEventListener("click",e=>{e.target===modal&&(modal.style.display="none")})),document.getElementById("compareInput").style.display="block",document.getElementById("compareResults").style.display="none",document.getElementById("compareUrl").value="",modal.style.display="flex"}function parseShareUrl(url){const SHORT_TAG={b:"been",w:"want",l:"live",v:"lived"},tags=new Map;try{let hash="";if(!url.includes("#m=")){if(url.includes("#v=")){const encoded=url.substring(url.indexOf("#v=")+3),visited=JSON.parse(atob(decodeURIComponent(encoded)));return Array.isArray(visited)&&visited.forEach(v=>tags.set(v,"been")),tags}return null}return hash=url.substring(url.indexOf("#m=")+3),hash.split(",").forEach(p=>{const match=p.match(/^(\d+)([bwlv]?)$/);if(match){const idx=parseInt(match[1]),tag=match[2]?SHORT_TAG[match[2]]:"been";idx>=0&&idx<DATA.length&&tags.set(DATA[idx].n,tag)}}),tags}catch(e){return null}}function runComparison(){const url=document.getElementById("compareUrl").value.trim();if(!url)return void showToast("Paste a share link first");const friendTags=parseShareUrl(url);if(!friendTags||0===friendTags.size)return void showToast("Couldn't read that link — make sure it's a RoamLark share URL");const myNames=new Set(state.tags.keys()),friendNames=new Set(friendTags.keys()),both=[...myNames].filter(n=>friendNames.has(n)).sort(),onlyMe=[...myNames].filter(n=>!friendNames.has(n)).sort(),onlyFriend=[...friendNames].filter(n=>!myNames.has(n)).sort(),bothWant=[...myNames].filter(n=>friendNames.has(n)&&"want"===state.tags.get(n)&&"want"===friendTags.get(n)).sort(),myTotal=myNames.size,friendTotal=friendNames.size,overlapPct=myTotal+friendTotal>0?Math.round(both.length/(myTotal+friendTotal-both.length)*100):0;let compatLabel="",compatColor="";overlapPct>=60?(compatLabel="Travel Twins! 👯",compatColor="#059669"):overlapPct>=40?(compatLabel="Kindred Spirits ✈️",compatColor="#3b82f6"):overlapPct>=20?(compatLabel="Complementary Explorers 🌍",compatColor="#f59e0b"):(compatLabel="New Frontiers Together 🚀",compatColor="#a855f7");const renderList=(items,tagMap,maxShow)=>{if(!items.length)return'<span style="color:#94a3b8;font-style:italic">None</span>';const show=items.slice(0,maxShow||8),rest=items.length-show.length;return show.map(n=>{const t=tagMap?tagMap.get(n):null,c=t?TAG_COLORS[t]:"#64748b";return`<span style="display:inline-block;padding:2px 8px;margin:2px;border-radius:5px;font-size:11px;font-weight:600;background:${c}12;color:${c};border:1px solid ${c}30">${n}</span>`}).join("")+(rest>0?`<span style="color:#94a3b8;font-size:11px;margin-left:4px">+${rest} more</span>`:"")};let html=`\n    <div style="text-align:center;margin-bottom:16px">\n      <div style="font-size:48px;font-weight:800;font-family:'Nunito',sans-serif;color:${compatColor}">${overlapPct}%</div>\n      <div style="font-size:14px;font-weight:700;color:${compatColor}">${compatLabel}</div>\n      <div style="font-size:11px;color:#94a3b8;margin-top:4px">Travel overlap score</div>\n    </div>\n    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:16px">\n      <div style="background:#f8fafc;border-radius:10px;padding:10px">\n        <div style="font-size:24px;font-weight:800;font-family:'Nunito',sans-serif;color:#1e293b">${myTotal}</div>\n        <div style="font-size:10px;color:#94a3b8;font-weight:600">Your map</div>\n      </div>\n      <div style="background:#f0fdf4;border-radius:10px;padding:10px">\n        <div style="font-size:24px;font-weight:800;font-family:'Nunito',sans-serif;color:#059669">${both.length}</div>\n        <div style="font-size:10px;color:#059669;font-weight:600">In common</div>\n      </div>\n      <div style="background:#f8fafc;border-radius:10px;padding:10px">\n        <div style="font-size:24px;font-weight:800;font-family:'Nunito',sans-serif;color:#1e293b">${friendTotal}</div>\n        <div style="font-size:10px;color:#94a3b8;font-weight:600">Their map</div>\n      </div>\n    </div>`;bothWant.length&&(html+=`<div style="margin-bottom:12px">\n      <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:4px">🎯 Both want to visit (${bothWant.length})</div>\n      ${renderList(bothWant,null,6)}\n    </div>`),html+=`<div style="margin-bottom:12px">\n    <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:4px">🤝 Both been to (${both.length})</div>\n    ${renderList(both,state.tags,10)}\n  </div>\n  <div style="margin-bottom:12px">\n    <div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:4px">🙋 Only you (${onlyMe.length})</div>\n    ${renderList(onlyMe,state.tags,8)}\n  </div>\n  <div style="margin-bottom:12px">\n    <div style="font-size:12px;font-weight:700;color:#a855f7;margin-bottom:4px">👋 Only them (${onlyFriend.length})</div>\n    ${renderList(onlyFriend,friendTags,8)}\n  </div>\n  <button onclick="document.getElementById('compareInput').style.display='block';document.getElementById('compareResults').style.display='none'" style="width:100%;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:transparent;color:#64748b;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:8px">← Compare another friend</button>`,document.getElementById("compareInput").style.display="none";const results=document.getElementById("compareResults");results.innerHTML=html,results.style.display="block"}function showToast(msg){const t=document.createElement("div");t.textContent=msg,Object.assign(t.style,{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%)",background:"#059669",color:"#fff",padding:"12px 24px",borderRadius:"12px",fontSize:"14px",fontWeight:"600",fontFamily:"'Nunito',sans-serif",zIndex:"9999",boxShadow:"0 4px 20px rgba(0,0,0,.2)",transition:"opacity .3s"}),document.body.appendChild(t),setTimeout(()=>{t.style.opacity="0",setTimeout(()=>t.remove(),300)},2500)}CanvasRenderingContext2D.prototype.roundRect||(CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){"number"==typeof r&&(r=[r,r,r,r]),Array.isArray(r)||(r=[0,0,0,0]);const[tl,tr,br,bl]=[r[0]||0,r[1]||r[0]||0,r[2]||r[0]||0,r[3]||r[1]||r[0]||0];this.moveTo(x+tl,y),this.lineTo(x+w-tr,y),this.quadraticCurveTo(x+w,y,x+w,y+tr),this.lineTo(x+w,y+h-br),this.quadraticCurveTo(x+w,y+h,x+w-br,y+h),this.lineTo(x+bl,y+h),this.quadraticCurveTo(x,y+h,x,y+h-bl),this.lineTo(x,y+tl),this.quadraticCurveTo(x,y,x+tl,y),this.closePath()})</script><script>const DATA=[{n:"Algeria",cat:"un",cont:"Africa",iso:"DZ",tcc:1,fifa:1,ioc:1},{n:"Angola",cat:"un",cont:"Africa",iso:"AO",tcc:1,fifa:1,ioc:1},{n:"Benin",cat:"un",cont:"Africa",iso:"BJ",tcc:1,fifa:1,ioc:1},{n:"Botswana",cat:"un",cont:"Africa",iso:"BW",tcc:1,fifa:1,ioc:1},{n:"Burkina Faso",cat:"un",cont:"Africa",iso:"BF",tcc:1,fifa:1,ioc:1},{n:"Burundi",cat:"un",cont:"Africa",iso:"BI",tcc:1,fifa:1,ioc:1},{n:"Cabo Verde",cat:"un",cont:"Africa",iso:"CV",tcc:1,fifa:1,ioc:1},{n:"Cameroon",cat:"un",cont:"Africa",iso:"CM",tcc:1,fifa:1,ioc:1},{n:"Central African Republic",cat:"un",cont:"Africa",iso:"CF",tcc:1,fifa:1,ioc:1},{n:"Chad",cat:"un",cont:"Africa",iso:"TD",tcc:1,fifa:1,ioc:1},{n:"Comoros",cat:"un",cont:"Africa",iso:"KM",tcc:1,fifa:1,ioc:1},{n:"Congo (Republic)",cat:"un",cont:"Africa",iso:"CG",tcc:1,fifa:1,ioc:1},{n:"Congo (DR)",cat:"un",cont:"Africa",iso:"CD",tcc:1,fifa:1,ioc:1},{n:"Côte d'Ivoire",cat:"un",cont:"Africa",iso:"CI",tcc:1,fifa:1,ioc:1},{n:"Djibouti",cat:"un",cont:"Africa",iso:"DJ",tcc:1,fifa:1,ioc:1},{n:"Egypt",cat:"un",cont:"Africa",iso:"EG",tcc:1,fifa:1,ioc:1},{n:"Equatorial Guinea",cat:"un",cont:"Africa",iso:"GQ",tcc:1,fifa:1,ioc:1},{n:"Eritrea",cat:"un",cont:"Africa",iso:"ER",tcc:1,fifa:1,ioc:1},{n:"Eswatini",cat:"un",cont:"Africa",iso:"SZ",tcc:1,fifa:1,ioc:1},{n:"Ethiopia",cat:"un",cont:"Africa",iso:"ET",tcc:1,fifa:1,ioc:1},{n:"Gabon",cat:"un",cont:"Africa",iso:"GA",tcc:1,fifa:1,ioc:1},{n:"Gambia",cat:"un",cont:"Africa",iso:"GM",tcc:1,fifa:1,ioc:1},{n:"Ghana",cat:"un",cont:"Africa",iso:"GH",tcc:1,fifa:1,ioc:1},{n:"Guinea",cat:"un",cont:"Africa",iso:"GN",tcc:1,fifa:1,ioc:1},{n:"Guinea-Bissau",cat:"un",cont:"Africa",iso:"GW",tcc:1,fifa:1,ioc:1},{n:"Kenya",cat:"un",cont:"Africa",iso:"KE",tcc:1,fifa:1,ioc:1},{n:"Lesotho",cat:"un",cont:"Africa",iso:"LS",tcc:1,fifa:1,ioc:1},{n:"Liberia",cat:"un",cont:"Africa",iso:"LR",tcc:1,fifa:1,ioc:1},{n:"Libya",cat:"un",cont:"Africa",iso:"LY",tcc:1,fifa:1,ioc:1},{n:"Madagascar",cat:"un",cont:"Africa",iso:"MG",tcc:1,fifa:1,ioc:1},{n:"Malawi",cat:"un",cont:"Africa",iso:"MW",tcc:1,fifa:1,ioc:1},{n:"Mali",cat:"un",cont:"Africa",iso:"ML",tcc:1,fifa:1,ioc:1},{n:"Mauritania",cat:"un",cont:"Africa",iso:"MR",tcc:1,fifa:1,ioc:1},{n:"Mauritius",cat:"un",cont:"Africa",iso:"MU",tcc:1,fifa:1,ioc:1},{n:"Morocco",cat:"un",cont:"Africa",iso:"MA",tcc:1,fifa:1,ioc:1},{n:"Mozambique",cat:"un",cont:"Africa",iso:"MZ",tcc:1,fifa:1,ioc:1},{n:"Namibia",cat:"un",cont:"Africa",iso:"NA",tcc:1,fifa:1,ioc:1},{n:"Niger",cat:"un",cont:"Africa",iso:"NE",tcc:1,fifa:1,ioc:1},{n:"Nigeria",cat:"un",cont:"Africa",iso:"NG",tcc:1,fifa:1,ioc:1},{n:"Rwanda",cat:"un",cont:"Africa",iso:"RW",tcc:1,fifa:1,ioc:1},{n:"São Tomé and Príncipe",cat:"un",cont:"Africa",iso:"ST",tcc:1,fifa:1,ioc:1},{n:"Senegal",cat:"un",cont:"Africa",iso:"SN",tcc:1,fifa:1,ioc:1},{n:"Seychelles",cat:"un",cont:"Africa",iso:"SC",tcc:1,fifa:1,ioc:1},{n:"Sierra Leone",cat:"un",cont:"Africa",iso:"SL",tcc:1,fifa:1,ioc:1},{n:"Somalia",cat:"un",cont:"Africa",iso:"SO",tcc:1,fifa:1,ioc:1},{n:"South Africa",cat:"un",cont:"Africa",iso:"ZA",tcc:1,fifa:1,ioc:1},{n:"South Sudan",cat:"un",cont:"Africa",iso:"SS",tcc:1,fifa:1,ioc:1},{n:"Sudan",cat:"un",cont:"Africa",iso:"SD",tcc:1,fifa:1,ioc:1},{n:"Tanzania",cat:"un",cont:"Africa",iso:"TZ",tcc:1,fifa:1,ioc:1},{n:"Togo",cat:"un",cont:"Africa",iso:"TG",tcc:1,fifa:1,ioc:1},{n:"Tunisia",cat:"un",cont:"Africa",iso:"TN",tcc:1,fifa:1,ioc:1},{n:"Uganda",cat:"un",cont:"Africa",iso:"UG",tcc:1,fifa:1,ioc:1},{n:"Zambia",cat:"un",cont:"Africa",iso:"ZM",tcc:1,fifa:1,ioc:1},{n:"Zimbabwe",cat:"un",cont:"Africa",iso:"ZW",tcc:1,fifa:1,ioc:1},{n:"Afghanistan",cat:"un",cont:"Asia",iso:"AF",tcc:1,fifa:1,ioc:1},{n:"Bahrain",cat:"un",cont:"Asia",iso:"BH",tcc:1,fifa:1,ioc:1},{n:"Bangladesh",cat:"un",cont:"Asia",iso:"BD",tcc:1,fifa:1,ioc:1},{n:"Bhutan",cat:"un",cont:"Asia",iso:"BT",tcc:1,fifa:1,ioc:1},{n:"Brunei",cat:"un",cont:"Asia",iso:"BN",tcc:1,fifa:1,ioc:1},{n:"Cambodia",cat:"un",cont:"Asia",iso:"KH",tcc:1,fifa:1,ioc:1},{n:"China",cat:"un",cont:"Asia",iso:"CN",tcc:1,fifa:1,ioc:1},{n:"Cyprus",cat:"un",cont:"Asia",iso:"CY",tcc:1,fifa:1,ioc:1},{n:"Georgia",cat:"un",cont:"Asia",iso:"GE",tcc:1,fifa:1,ioc:1},{n:"India",cat:"un",cont:"Asia",iso:"IN",tcc:1,fifa:1,ioc:1},{n:"Indonesia",cat:"un",cont:"Asia",iso:"ID",tcc:0,fifa:1,ioc:1},{n:"Iran",cat:"un",cont:"Asia",iso:"IR",tcc:1,fifa:1,ioc:1},{n:"Iraq",cat:"un",cont:"Asia",iso:"IQ",tcc:1,fifa:1,ioc:1},{n:"Israel",cat:"un",cont:"Asia",iso:"IL",tcc:1,fifa:1,ioc:1},{n:"Japan",cat:"un",cont:"Asia",iso:"JP",tcc:1,fifa:1,ioc:1},{n:"Jordan",cat:"un",cont:"Asia",iso:"JO",tcc:1,fifa:1,ioc:1},{n:"Kazakhstan",cat:"un",cont:"Asia",iso:"KZ",tcc:1,fifa:1,ioc:1},{n:"Kuwait",cat:"un",cont:"Asia",iso:"KW",tcc:1,fifa:1,ioc:1},{n:"Kyrgyzstan",cat:"un",cont:"Asia",iso:"KG",tcc:1,fifa:1,ioc:1},{n:"Laos",cat:"un",cont:"Asia",iso:"LA",tcc:1,fifa:1,ioc:1},{n:"Lebanon",cat:"un",cont:"Asia",iso:"LB",tcc:1,fifa:1,ioc:1},{n:"Malaysia",cat:"un",cont:"Asia",iso:"MY",tcc:1,fifa:1,ioc:1},{n:"Maldives",cat:"un",cont:"Asia",iso:"MV",tcc:1,fifa:1,ioc:1},{n:"Mongolia",cat:"un",cont:"Asia",iso:"MN",tcc:1,fifa:1,ioc:1},{n:"Myanmar",cat:"un",cont:"Asia",iso:"MM",tcc:1,fifa:1,ioc:1},{n:"Nepal",cat:"un",cont:"Asia",iso:"NP",tcc:1,fifa:1,ioc:1},{n:"North Korea",cat:"un",cont:"Asia",iso:"KP",tcc:1,fifa:1,ioc:1},{n:"Oman",cat:"un",cont:"Asia",iso:"OM",tcc:1,fifa:1,ioc:1},{n:"Pakistan",cat:"un",cont:"Asia",iso:"PK",tcc:1,fifa:1,ioc:1},{n:"Philippines",cat:"un",cont:"Asia",iso:"PH",tcc:1,fifa:1,ioc:1},{n:"Qatar",cat:"un",cont:"Asia",iso:"QA",tcc:1,fifa:1,ioc:1},{n:"Saudi Arabia",cat:"un",cont:"Asia",iso:"SA",tcc:1,fifa:1,ioc:1},{n:"Singapore",cat:"un",cont:"Asia",iso:"SG",tcc:1,fifa:1,ioc:1},{n:"South Korea",cat:"un",cont:"Asia",iso:"KR",tcc:1,fifa:1,ioc:1},{n:"Sri Lanka",cat:"un",cont:"Asia",iso:"LK",tcc:1,fifa:1,ioc:1},{n:"Syria",cat:"un",cont:"Asia",iso:"SY",tcc:1,fifa:1,ioc:1},{n:"Tajikistan",cat:"un",cont:"Asia",iso:"TJ",tcc:1,fifa:1,ioc:1},{n:"Thailand",cat:"un",cont:"Asia",iso:"TH",tcc:1,fifa:1,ioc:1},{n:"Timor-Leste",cat:"un",cont:"Asia",iso:"TL",tcc:1,fifa:1,ioc:1},{n:"Turkey",cat:"un",cont:"Asia",iso:"TR",tcc:1,fifa:1,ioc:1},{n:"Turkmenistan",cat:"un",cont:"Asia",iso:"TM",tcc:1,fifa:1,ioc:1},{n:"United Arab Emirates",cat:"un",cont:"Asia",iso:"AE",tcc:0,fifa:1,ioc:1},{n:"Uzbekistan",cat:"un",cont:"Asia",iso:"UZ",tcc:1,fifa:1,ioc:1},{n:"Vietnam",cat:"un",cont:"Asia",iso:"VN",tcc:1,fifa:1,ioc:1},{n:"Yemen",cat:"un",cont:"Asia",iso:"YE",tcc:1,fifa:1,ioc:1},{n:"Armenia",cat:"un",cont:"Asia",iso:"AM",tcc:1,fifa:1,ioc:1},{n:"Azerbaijan",cat:"un",cont:"Asia",iso:"AZ",tcc:1,fifa:1,ioc:1},{n:"Albania",cat:"un",cont:"Europe",iso:"AL",tcc:1,fifa:1,ioc:1},{n:"Andorra",cat:"un",cont:"Europe",iso:"AD",tcc:1,fifa:1,ioc:1},{n:"Austria",cat:"un",cont:"Europe",iso:"AT",tcc:1,fifa:1,ioc:1},{n:"Belarus",cat:"un",cont:"Europe",iso:"BY",tcc:1,fifa:1,ioc:1},{n:"Belgium",cat:"un",cont:"Europe",iso:"BE",tcc:1,fifa:1,ioc:1},{n:"Bosnia and Herzegovina",cat:"un",cont:"Europe",iso:"BA",tcc:1,fifa:1,ioc:1},{n:"Bulgaria",cat:"un",cont:"Europe",iso:"BG",tcc:1,fifa:1,ioc:1},{n:"Croatia",cat:"un",cont:"Europe",iso:"HR",tcc:1,fifa:1,ioc:1},{n:"Czech Republic",cat:"un",cont:"Europe",iso:"CZ",tcc:1,fifa:1,ioc:1},{n:"Denmark",cat:"un",cont:"Europe",iso:"DK",tcc:1,fifa:1,ioc:1},{n:"Estonia",cat:"un",cont:"Europe",iso:"EE",tcc:1,fifa:1,ioc:1},{n:"Finland",cat:"un",cont:"Europe",iso:"FI",tcc:1,fifa:1,ioc:1},{n:"France",cat:"un",cont:"Europe",iso:"FR",tcc:1,fifa:1,ioc:1},{n:"Germany",cat:"un",cont:"Europe",iso:"DE",tcc:1,fifa:1,ioc:1},{n:"Greece",cat:"un",cont:"Europe",iso:"GR",tcc:1,fifa:1,ioc:1},{n:"Hungary",cat:"un",cont:"Europe",iso:"HU",tcc:1,fifa:1,ioc:1},{n:"Iceland",cat:"un",cont:"Europe",iso:"IS",tcc:1,fifa:1,ioc:1},{n:"Ireland",cat:"un",cont:"Europe",iso:"IE",tcc:1,fifa:1,ioc:1},{n:"Italy",cat:"un",cont:"Europe",iso:"IT",tcc:1,fifa:1,ioc:1},{n:"Latvia",cat:"un",cont:"Europe",iso:"LV",tcc:1,fifa:1,ioc:1},{n:"Liechtenstein",cat:"un",cont:"Europe",iso:"LI",tcc:1,fifa:1,ioc:1},{n:"Lithuania",cat:"un",cont:"Europe",iso:"LT",tcc:1,fifa:1,ioc:1},{n:"Luxembourg",cat:"un",cont:"Europe",iso:"LU",tcc:1,fifa:1,ioc:1},{n:"Malta",cat:"un",cont:"Europe",iso:"MT",tcc:1,fifa:1,ioc:1},{n:"Moldova",cat:"un",cont:"Europe",iso:"MD",tcc:1,fifa:1,ioc:1},{n:"Monaco",cat:"un",cont:"Europe",iso:"MC",tcc:1,fifa:0,ioc:1},{n:"Montenegro",cat:"un",cont:"Europe",iso:"ME",tcc:1,fifa:1,ioc:1},{n:"Netherlands",cat:"un",cont:"Europe",iso:"NL",tcc:1,fifa:1,ioc:1},{n:"North Macedonia",cat:"un",cont:"Europe",iso:"MK",tcc:1,fifa:1,ioc:1},{n:"Norway",cat:"un",cont:"Europe",iso:"NO",tcc:1,fifa:1,ioc:1},{n:"Poland",cat:"un",cont:"Europe",iso:"PL",tcc:1,fifa:1,ioc:1},{n:"Portugal",cat:"un",cont:"Europe",iso:"PT",tcc:1,fifa:1,ioc:1},{n:"Romania",cat:"un",cont:"Europe",iso:"RO",tcc:1,fifa:1,ioc:1},{n:"Russia",cat:"un",cont:"Europe",iso:"RU",tcc:1,fifa:1,ioc:1},{n:"San Marino",cat:"un",cont:"Europe",iso:"SM",tcc:1,fifa:1,ioc:1},{n:"Serbia",cat:"un",cont:"Europe",iso:"RS",tcc:1,fifa:1,ioc:1},{n:"Slovakia",cat:"un",cont:"Europe",iso:"SK",tcc:1,fifa:1,ioc:1},{n:"Slovenia",cat:"un",cont:"Europe",iso:"SI",tcc:1,fifa:1,ioc:1},{n:"Spain",cat:"un",cont:"Europe",iso:"ES",tcc:1,fifa:1,ioc:1},{n:"Sweden",cat:"un",cont:"Europe",iso:"SE",tcc:1,fifa:1,ioc:1},{n:"Switzerland",cat:"un",cont:"Europe",iso:"CH",tcc:1,fifa:1,ioc:1},{n:"Ukraine",cat:"un",cont:"Europe",iso:"UA",tcc:1,fifa:1,ioc:1},{n:"United Kingdom",cat:"un",cont:"Europe",iso:"GB",tcc:1,fifa:0,ioc:1},{n:"Antigua and Barbuda",cat:"un",cont:"North America",iso:"AG",tcc:1,fifa:1,ioc:1},{n:"Bahamas",cat:"un",cont:"North America",iso:"BS",tcc:1,fifa:1,ioc:1},{n:"Barbados",cat:"un",cont:"North America",iso:"BB",tcc:1,fifa:1,ioc:1},{n:"Belize",cat:"un",cont:"North America",iso:"BZ",tcc:1,fifa:1,ioc:1},{n:"Canada",cat:"un",cont:"North America",iso:"CA",tcc:1,fifa:1,ioc:1},{n:"Costa Rica",cat:"un",cont:"North America",iso:"CR",tcc:1,fifa:1,ioc:1},{n:"Cuba",cat:"un",cont:"North America",iso:"CU",tcc:1,fifa:1,ioc:1},{n:"Dominica",cat:"un",cont:"North America",iso:"DM",tcc:1,fifa:1,ioc:1},{n:"Dominican Republic",cat:"un",cont:"North America",iso:"DO",tcc:1,fifa:1,ioc:1},{n:"El Salvador",cat:"un",cont:"North America",iso:"SV",tcc:1,fifa:1,ioc:1},{n:"Grenada",cat:"un",cont:"North America",iso:"GD",tcc:1,fifa:1,ioc:1},{n:"Guatemala",cat:"un",cont:"North America",iso:"GT",tcc:1,fifa:1,ioc:1},{n:"Haiti",cat:"un",cont:"North America",iso:"HT",tcc:1,fifa:1,ioc:1},{n:"Honduras",cat:"un",cont:"North America",iso:"HN",tcc:1,fifa:1,ioc:1},{n:"Jamaica",cat:"un",cont:"North America",iso:"JM",tcc:1,fifa:1,ioc:1},{n:"Mexico",cat:"un",cont:"North America",iso:"MX",tcc:1,fifa:1,ioc:1},{n:"Nicaragua",cat:"un",cont:"North America",iso:"NI",tcc:1,fifa:1,ioc:1},{n:"Panama",cat:"un",cont:"North America",iso:"PA",tcc:1,fifa:1,ioc:1},{n:"Saint Kitts and Nevis",cat:"un",cont:"North America",iso:"KN",tcc:1,fifa:1,ioc:1},{n:"Saint Lucia",cat:"un",cont:"North America",iso:"LC",tcc:1,fifa:1,ioc:1},{n:"Saint Vincent and the Grenadines",cat:"un",cont:"North America",iso:"VC",tcc:1,fifa:1,ioc:1},{n:"Trinidad and Tobago",cat:"un",cont:"North America",iso:"TT",tcc:1,fifa:1,ioc:1},{n:"United States",cat:"un",cont:"North America",iso:"US",tcc:1,fifa:1,ioc:1},{n:"Argentina",cat:"un",cont:"South America",iso:"AR",tcc:1,fifa:1,ioc:1},{n:"Bolivia",cat:"un",cont:"South America",iso:"BO",tcc:1,fifa:1,ioc:1},{n:"Brazil",cat:"un",cont:"South America",iso:"BR",tcc:1,fifa:1,ioc:1},{n:"Chile",cat:"un",cont:"South America",iso:"CL",tcc:1,fifa:1,ioc:1},{n:"Colombia",cat:"un",cont:"South America",iso:"CO",tcc:1,fifa:1,ioc:1},{n:"Ecuador",cat:"un",cont:"South America",iso:"EC",tcc:1,fifa:1,ioc:1},{n:"Guyana",cat:"un",cont:"South America",iso:"GY",tcc:1,fifa:1,ioc:1},{n:"Paraguay",cat:"un",cont:"South America",iso:"PY",tcc:1,fifa:1,ioc:1},{n:"Peru",cat:"un",cont:"South America",iso:"PE",tcc:1,fifa:1,ioc:1},{n:"Suriname",cat:"un",cont:"South America",iso:"SR",tcc:1,fifa:1,ioc:1},{n:"Uruguay",cat:"un",cont:"South America",iso:"UY",tcc:1,fifa:1,ioc:1},{n:"Venezuela",cat:"un",cont:"South America",iso:"VE",tcc:1,fifa:1,ioc:1},{n:"Australia",cat:"un",cont:"Oceania",iso:"AU",tcc:1,fifa:1,ioc:1},{n:"Fiji",cat:"un",cont:"Oceania",iso:"FJ",tcc:1,fifa:1,ioc:1},{n:"Kiribati",cat:"un",cont:"Oceania",iso:"KI",tcc:1,fifa:0,ioc:1},{n:"Marshall Islands",cat:"un",cont:"Oceania",iso:"MH",tcc:1,fifa:0,ioc:1},{n:"Micronesia",cat:"un",cont:"Oceania",iso:"FM",tcc:1,fifa:0,ioc:1},{n:"Nauru",cat:"un",cont:"Oceania",iso:"NR",tcc:1,fifa:0,ioc:1},{n:"New Zealand",cat:"un",cont:"Oceania",iso:"NZ",tcc:1,fifa:1,ioc:1},{n:"Palau",cat:"un",cont:"Oceania",iso:"PW",tcc:1,fifa:0,ioc:1},{n:"Papua New Guinea",cat:"un",cont:"Oceania",iso:"PG",tcc:1,fifa:1,ioc:1},{n:"Samoa",cat:"un",cont:"Oceania",iso:"WS",tcc:1,fifa:1,ioc:1},{n:"Solomon Islands",cat:"un",cont:"Oceania",iso:"SB",tcc:1,fifa:1,ioc:1},{n:"Tonga",cat:"un",cont:"Oceania",iso:"TO",tcc:1,fifa:1,ioc:1},{n:"Tuvalu",cat:"un",cont:"Oceania",iso:"TV",tcc:1,fifa:0,ioc:1},{n:"Vanuatu",cat:"un",cont:"Oceania",iso:"VU",tcc:1,fifa:1,ioc:1},{n:"Palestine",cat:"observer",cont:"Asia",iso:"PS",tcc:1,fifa:1,ioc:1},{n:"Vatican City",cat:"observer",cont:"Europe",iso:"VA",tcc:1,fifa:0,ioc:1},{n:"Hong Kong",cat:"auto",sub:"Chinese SAR",cont:"Asia",iso:"HK",tcc:1,fifa:1,ioc:1},{n:"Macau",cat:"auto",sub:"Chinese SAR",cont:"Asia",iso:"MO",tcc:1,fifa:1,ioc:0},{n:"Azores",cat:"auto",sub:"Portuguese",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Madeira",cat:"auto",sub:"Portuguese",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Canary Islands",cat:"auto",sub:"Spanish",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Ceuta",cat:"auto",sub:"Spanish",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Melilla",cat:"auto",sub:"Spanish",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Åland Islands",cat:"auto",sub:"Finnish",cont:"Europe",iso:"AX",tcc:1,fifa:0,ioc:0},{n:"Greenland",cat:"auto",sub:"Danish Realm",cont:"North America",iso:"GL",tcc:1,fifa:0,ioc:0},{n:"Faroe Islands",cat:"auto",sub:"Danish Realm",cont:"Europe",iso:"FO",tcc:1,fifa:1,ioc:0},{n:"Zanzibar",cat:"auto",sub:"Tanzanian",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Kurdistan Region",cat:"auto",sub:"Iraqi",cont:"Asia",iso:"",tcc:0,fifa:0,ioc:0},{n:"Bangsamoro",cat:"auto",sub:"Philippine",cont:"Asia",iso:"",tcc:0,fifa:0,ioc:0},{n:"Aceh",cat:"auto",sub:"Indonesian",cont:"Asia",iso:"",tcc:0,fifa:0,ioc:0},{n:"Papua (Indonesia)",cat:"auto",sub:"Indonesian",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Adjara",cat:"auto",sub:"Georgian",cont:"Asia",iso:"",tcc:0,fifa:0,ioc:0},{n:"Gagauzia",cat:"auto",sub:"Moldovan",cont:"Europe",iso:"",tcc:0,fifa:0,ioc:0},{n:"Anguilla",cat:"territory",sub:"British",cont:"North America",iso:"AI",tcc:1,fifa:1,ioc:0},{n:"Bermuda",cat:"territory",sub:"British",cont:"North America",iso:"BM",tcc:1,fifa:1,ioc:1},{n:"British Indian Ocean Territory",cat:"territory",sub:"British",cont:"Asia",iso:"IO",tcc:1,fifa:0,ioc:0},{n:"British Virgin Islands",cat:"territory",sub:"British",cont:"North America",iso:"VG",tcc:1,fifa:1,ioc:1},{n:"Cayman Islands",cat:"territory",sub:"British",cont:"North America",iso:"KY",tcc:1,fifa:1,ioc:1},{n:"Falkland Islands",cat:"territory",sub:"British",cont:"South America",iso:"FK",tcc:1,fifa:0,ioc:0},{n:"Gibraltar",cat:"territory",sub:"British",cont:"Europe",iso:"GI",tcc:1,fifa:1,ioc:0},{n:"Montserrat",cat:"territory",sub:"British",cont:"North America",iso:"MS",tcc:1,fifa:1,ioc:0},{n:"Pitcairn Islands",cat:"territory",sub:"British",cont:"Oceania",iso:"PN",tcc:1,fifa:0,ioc:0},{n:"Saint Helena",cat:"territory",sub:"British",cont:"Africa",iso:"SH",tcc:1,fifa:0,ioc:0},{n:"Ascension Island",cat:"territory",sub:"British",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Tristan da Cunha",cat:"territory",sub:"British",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"South Georgia",cat:"territory",sub:"British",cont:"South America",iso:"GS",tcc:1,fifa:0,ioc:0},{n:"Turks and Caicos",cat:"territory",sub:"British",cont:"North America",iso:"TC",tcc:1,fifa:1,ioc:0},{n:"Akrotiri and Dhekelia",cat:"territory",sub:"British",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Jersey",cat:"territory",sub:"Crown Dependency",cont:"Europe",iso:"JE",tcc:1,fifa:0,ioc:0},{n:"Guernsey",cat:"territory",sub:"Crown Dependency",cont:"Europe",iso:"GG",tcc:1,fifa:0,ioc:0},{n:"Isle of Man",cat:"territory",sub:"Crown Dependency",cont:"Europe",iso:"IM",tcc:1,fifa:0,ioc:0},{n:"French Polynesia",cat:"territory",sub:"French",cont:"Oceania",iso:"PF",tcc:1,fifa:1,ioc:0},{n:"New Caledonia",cat:"territory",sub:"French",cont:"Oceania",iso:"NC",tcc:1,fifa:1,ioc:0},{n:"Réunion",cat:"territory",sub:"French",cont:"Africa",iso:"RE",tcc:1,fifa:0,ioc:0},{n:"Martinique",cat:"territory",sub:"French",cont:"North America",iso:"MQ",tcc:1,fifa:0,ioc:0},{n:"Guadeloupe",cat:"territory",sub:"French",cont:"North America",iso:"GP",tcc:1,fifa:0,ioc:0},{n:"Mayotte",cat:"territory",sub:"French",cont:"Africa",iso:"YT",tcc:1,fifa:0,ioc:0},{n:"French Guiana",cat:"territory",sub:"French",cont:"South America",iso:"GF",tcc:1,fifa:0,ioc:0},{n:"Saint Martin (French)",cat:"territory",sub:"French",cont:"North America",iso:"MF",tcc:1,fifa:0,ioc:0},{n:"Saint Barthélemy",cat:"territory",sub:"French",cont:"North America",iso:"BL",tcc:1,fifa:0,ioc:0},{n:"Saint Pierre and Miquelon",cat:"territory",sub:"French",cont:"North America",iso:"PM",tcc:1,fifa:0,ioc:0},{n:"Wallis and Futuna",cat:"territory",sub:"French",cont:"Oceania",iso:"WF",tcc:1,fifa:0,ioc:0},{n:"Puerto Rico",cat:"territory",sub:"US",cont:"North America",iso:"PR",tcc:1,fifa:1,ioc:1},{n:"Guam",cat:"territory",sub:"US",cont:"Oceania",iso:"GU",tcc:1,fifa:1,ioc:1},{n:"U.S. Virgin Islands",cat:"territory",sub:"US",cont:"North America",iso:"VI",tcc:1,fifa:1,ioc:1},{n:"American Samoa",cat:"territory",sub:"US",cont:"Oceania",iso:"AS",tcc:1,fifa:1,ioc:1},{n:"Northern Mariana Islands",cat:"territory",sub:"US",cont:"Oceania",iso:"MP",tcc:1,fifa:0,ioc:0},{n:"Aruba",cat:"territory",sub:"Dutch",cont:"North America",iso:"AW",tcc:1,fifa:1,ioc:1},{n:"Curaçao",cat:"territory",sub:"Dutch",cont:"North America",iso:"CW",tcc:1,fifa:1,ioc:0},{n:"Sint Maarten",cat:"territory",sub:"Dutch",cont:"North America",iso:"SX",tcc:1,fifa:0,ioc:0},{n:"Bonaire",cat:"territory",sub:"Dutch",cont:"North America",iso:"BQ",tcc:1,fifa:0,ioc:0},{n:"Saba",cat:"territory",sub:"Dutch",cont:"North America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sint Eustatius",cat:"territory",sub:"Dutch",cont:"North America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Christmas Island",cat:"territory",sub:"Australian",cont:"Asia",iso:"CX",tcc:1,fifa:0,ioc:0},{n:"Cocos (Keeling) Islands",cat:"territory",sub:"Australian",cont:"Asia",iso:"CC",tcc:1,fifa:0,ioc:0},{n:"Norfolk Island",cat:"territory",sub:"Australian",cont:"Oceania",iso:"NF",tcc:1,fifa:0,ioc:0},{n:"Cook Islands",cat:"territory",sub:"New Zealand",cont:"Oceania",iso:"CK",tcc:1,fifa:1,ioc:1},{n:"Niue",cat:"territory",sub:"New Zealand",cont:"Oceania",iso:"NU",tcc:1,fifa:0,ioc:0},{n:"Tokelau",cat:"territory",sub:"New Zealand",cont:"Oceania",iso:"TK",tcc:1,fifa:0,ioc:0},{n:"Svalbard",cat:"territory",sub:"Norwegian",cont:"Europe",iso:"SJ",tcc:1,fifa:0,ioc:0},{n:"Taiwan",cat:"disputed",cont:"Asia",iso:"TW",tcc:1,fifa:1,ioc:1},{n:"Kosovo",cat:"disputed",cont:"Europe",iso:"XK",tcc:1,fifa:1,ioc:1},{n:"Northern Cyprus",cat:"disputed",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Somaliland",cat:"disputed",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Abkhazia",cat:"disputed",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"South Ossetia",cat:"disputed",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Transnistria",cat:"disputed",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Western Sahara",cat:"disputed",cont:"Africa",iso:"EH",tcc:1,fifa:0,ioc:0},{n:"England",cat:"uk",cont:"Europe",iso:"GB-ENG",tcc:1,fifa:1,ioc:0},{n:"Scotland",cat:"uk",cont:"Europe",iso:"GB-SCT",tcc:1,fifa:1,ioc:0},{n:"Wales",cat:"uk",cont:"Europe",iso:"GB-WLS",tcc:1,fifa:1,ioc:0},{n:"Northern Ireland",cat:"uk",cont:"Europe",iso:"GB-NIR",tcc:1,fifa:1,ioc:0},{n:"Alaska",cat:"tcc_sub",sub:"US Splits",cont:"North America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Hawaiian Islands",cat:"tcc_sub",sub:"US Splits",cont:"North America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Midway Island",cat:"tcc_sub",sub:"US Splits",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Wake Island",cat:"tcc_sub",sub:"US Splits",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Russia in Asia (Siberia)",cat:"tcc_sub",sub:"Continental Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Turkey in Europe (Thrace)",cat:"tcc_sub",sub:"Continental Splits",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Egypt in Asia (Sinai)",cat:"tcc_sub",sub:"Continental Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Abu Dhabi",cat:"tcc_sub",sub:"UAE Emirates",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Ajman",cat:"tcc_sub",sub:"UAE Emirates",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Dubai",cat:"tcc_sub",sub:"UAE Emirates",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Fujairah",cat:"tcc_sub",sub:"UAE Emirates",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Ras Al Khaimah",cat:"tcc_sub",sub:"UAE Emirates",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sharjah",cat:"tcc_sub",sub:"UAE Emirates",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Umm Al Qaiwain",cat:"tcc_sub",sub:"UAE Emirates",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Java",cat:"tcc_sub",sub:"Indonesia Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Kalimantan",cat:"tcc_sub",sub:"Indonesia Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sulawesi",cat:"tcc_sub",sub:"Indonesia Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sumatra",cat:"tcc_sub",sub:"Indonesia Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Lesser Sunda Islands",cat:"tcc_sub",sub:"Indonesia Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Maluku Islands",cat:"tcc_sub",sub:"Indonesia Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sabah",cat:"tcc_sub",sub:"Malaysia Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sarawak",cat:"tcc_sub",sub:"Malaysia Splits",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Corsica",cat:"tcc_sub",sub:"European Islands",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sardinia",cat:"tcc_sub",sub:"European Islands",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sicily",cat:"tcc_sub",sub:"European Islands",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Crete",cat:"tcc_sub",sub:"European Islands",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Balearic Islands",cat:"tcc_sub",sub:"European Islands",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Ionian Islands",cat:"tcc_sub",sub:"European Islands",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Greek Aegean Islands",cat:"tcc_sub",sub:"European Islands",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Lampedusa",cat:"tcc_sub",sub:"European Islands",cont:"Europe",iso:"",tcc:0,fifa:0,ioc:0},{n:"Easter Island",cat:"tcc_sub",sub:"Remote Islands",cont:"South America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Galapagos Islands",cat:"tcc_sub",sub:"Remote Islands",cont:"South America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Fernando de Noronha",cat:"tcc_sub",sub:"Remote Islands",cont:"South America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Juan Fernandez Islands",cat:"tcc_sub",sub:"Remote Islands",cont:"South America",iso:"",tcc:1,fifa:0,ioc:0},{n:"San Andres & Providencia",cat:"tcc_sub",sub:"Remote Islands",cont:"North America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Chatham Islands",cat:"tcc_sub",sub:"Remote Islands",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Lord Howe Island",cat:"tcc_sub",sub:"Remote Islands",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Tasmania",cat:"tcc_sub",sub:"Remote Islands",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Socotra",cat:"tcc_sub",sub:"Remote Islands",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Rodrigues Island",cat:"tcc_sub",sub:"Remote Islands",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Prince Edward Islands (SA)",cat:"tcc_sub",sub:"Remote Islands",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Zil Elwannyen Sesel",cat:"tcc_sub",sub:"Remote Islands",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Line/Phoenix Islands",cat:"tcc_sub",sub:"Remote Islands",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Hainan Island",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Ryukyu Islands",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Ogasawara",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Jeju Island",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Kashmir",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Tibet",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Sikkim",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Andaman & Nicobar Islands",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Lakshadweep",cat:"tcc_sub",sub:"Asian Regions",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Bismarck Archipelago",cat:"tcc_sub",sub:"Asian Regions",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Cabinda",cat:"tcc_sub",sub:"Exclaves",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Nakhchivan",cat:"tcc_sub",sub:"Exclaves",cont:"Asia",iso:"",tcc:1,fifa:0,ioc:0},{n:"Kaliningrad",cat:"tcc_sub",sub:"Exclaves",cont:"Europe",iso:"",tcc:1,fifa:0,ioc:0},{n:"Srpska",cat:"tcc_sub",sub:"Exclaves",cont:"Europe",iso:"",tcc:0,fifa:0,ioc:0},{n:"Nevis",cat:"tcc_sub",sub:"Exclaves",cont:"North America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Marquesas Islands",cat:"tcc_sub",sub:"Pacific Splits",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Austral Islands",cat:"tcc_sub",sub:"Pacific Splits",cont:"Oceania",iso:"",tcc:1,fifa:0,ioc:0},{n:"Bioko Island",cat:"tcc_sub",sub:"Country Splits",cont:"Africa",iso:"",tcc:1,fifa:0,ioc:0},{n:"Tobago",cat:"tcc_sub",sub:"Country Splits",cont:"North America",iso:"",tcc:1,fifa:0,ioc:0},{n:"Pemba Island",cat:"tcc_sub",sub:"Country Splits",cont:"Africa",iso:"",tcc:0,fifa:0,ioc:0},{n:"Argentine Antarctica",cat:"tcc_sub",sub:"Antarctic",cont:"Antarctica",iso:"",tcc:1,fifa:0,ioc:0},{n:"Australian Antarctic Territory",cat:"tcc_sub",sub:"Antarctic",cont:"Antarctica",iso:"",tcc:1,fifa:0,ioc:0},{n:"British Antarctic Territory",cat:"tcc_sub",sub:"Antarctic",cont:"Antarctica",iso:"",tcc:1,fifa:0,ioc:0},{n:"Chilean Antarctic Territory",cat:"tcc_sub",sub:"Antarctic",cont:"Antarctica",iso:"",tcc:1,fifa:0,ioc:0},{n:"French Southern Territories",cat:"tcc_sub",sub:"Antarctic",cont:"Antarctica",iso:"",tcc:0,fifa:0,ioc:0},{n:"New Zealand Antarctic",cat:"tcc_sub",sub:"Antarctic",cont:"Antarctica",iso:"",tcc:1,fifa:0,ioc:0},{n:"Norwegian Antarctic",cat:"tcc_sub",sub:"Antarctic",cont:"Antarctica",iso:"",tcc:1,fifa:0,ioc:0}]</script><script>const AUTO_SUBS=["Chinese SAR","Portuguese","Spanish","Finnish","Danish Realm","Tanzanian","Iraqi","Philippine","Indonesian","Georgian","Moldovan"],TERR_SUBS=["British","Crown Dependency","French","US","Dutch","Australian","New Zealand","Norwegian"],TCC_SUBS=["US Splits","Continental Splits","UAE Emirates","Indonesia Splits","Malaysia Splits","European Islands","Remote Islands","Asian Regions","Exclaves","Pacific Splits","Country Splits","Antarctic"],CONT_COLORS={Africa:"#f59e0b",Asia:"#ef4444",Europe:"#3b82f6","North America":"#22c55e","South America":"#8b5cf6",Oceania:"#06b6d4",Antarctica:"#94a3b8"},CONT_EMOJI={Africa:"🌍",Asia:"🌏",Europe:"🌍","North America":"🌎","South America":"🌎",Oceania:"🌏",Antarctica:"🧊"},ACHIEVEMENTS=[{id:"first",threshold:1,icon:"🐣",label:"First Flight",desc:"Visited your first country"},{id:"ten",threshold:10,icon:"🪶",label:"Fledgling",desc:"10 countries visited"},{id:"twentyfive",threshold:25,icon:"🦅",label:"Soaring",desc:"25 countries visited"},{id:"fifty",threshold:50,icon:"🌟",label:"Explorer",desc:"50 countries visited"},{id:"hundred",threshold:100,icon:"👑",label:"Century Lark",desc:"100 countries visited"},{id:"onefifty",threshold:150,icon:"🔥",label:"Trailblazer",desc:"150 countries visited"},{id:"twohundred",threshold:200,icon:"💎",label:"Legendary",desc:"200 countries visited"},{id:"allcont",threshold:-1,icon:"🌏",label:"All Continents",desc:"Visited every continent"},{id:"caribbean",threshold:-1,icon:"🏝️",label:"Caribbean Hopper",desc:"Every Caribbean island"}],CARIBBEAN=["Antigua and Barbuda","Bahamas","Barbados","Cuba","Dominica","Dominican Republic","Grenada","Haiti","Jamaica","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Trinidad and Tobago","Anguilla","British Virgin Islands","Cayman Islands","Montserrat","Turks and Caicos","Martinique","Guadeloupe","Saint Martin (French)","Saint Barthélemy","Puerto Rico","U.S. Virgin Islands","Aruba","Curaçao","Sint Maarten","Bonaire","Saba","Sint Eustatius"],PRESETS={strict_un:{label:"Strict UN (193)",cats:["un"]},un_obs:{label:"UN + Observers (195)",cats:["un","observer"]},sst:{label:"States + Territories (267)",cats:["un","observer","disputed","auto","territory"],all:!0},fifa:{label:"FIFA (211)",filter:c=>1===c.fifa},ioc:{label:"Olympic (207)",filter:c=>1===c.ioc},tcc:{label:"TCC (~330)",filter:c=>1===c.tcc},max:{label:"Maximalist",cats:["un","observer","auto","territory","disputed","uk","tcc_sub"],all:!0}},NUM_TO_ISO={"004":"AF","008":"AL","012":"DZ","020":"AD","024":"AO","028":"AG","031":"AZ","032":"AR","036":"AU","040":"AT","044":"BS","048":"BH","050":"BD","051":"AM","052":"BB","056":"BE","064":"BT","068":"BO","070":"BA","072":"BW","076":"BR","084":"BZ","090":"SB","092":"VG","096":"BN",100:"BG",104:"MM",108:"BI",112:"BY",116:"KH",120:"CM",124:"CA",132:"CV",140:"CF",144:"LK",148:"TD",152:"CL",156:"CN",158:"TW",170:"CO",174:"KM",178:"CG",180:"CD",188:"CR",191:"HR",192:"CU",196:"CY",203:"CZ",204:"BJ",208:"DK",212:"DM",214:"DO",218:"EC",222:"SV",226:"GQ",231:"ET",232:"ER",233:"EE",234:"FO",238:"FK",242:"FJ",246:"FI",250:"FR",262:"DJ",266:"GA",268:"GE",270:"GM",275:"PS",276:"DE",288:"GH",296:"KI",300:"GR",304:"GL",308:"GD",320:"GT",324:"GN",328:"GY",332:"HT",340:"HN",344:"HK",348:"HU",352:"IS",356:"IN",360:"ID",364:"IR",368:"IQ",372:"IE",376:"IL",380:"IT",384:"CI",388:"JM",392:"JP",398:"KZ",400:"JO",404:"KE",408:"KP",410:"KR",414:"KW",417:"KG",418:"LA",422:"LB",426:"LS",428:"LV",430:"LR",434:"LY",438:"LI",440:"LT",442:"LU",446:"MO",450:"MG",454:"MW",458:"MY",462:"MV",466:"ML",470:"MT",478:"MR",480:"MU",484:"MX",492:"MC",496:"MN",498:"MD",499:"ME",504:"MA",508:"MZ",512:"OM",516:"NA",520:"NR",524:"NP",528:"NL",540:"NC",548:"VU",554:"NZ",558:"NI",562:"NE",566:"NG",578:"NO",583:"FM",584:"MH",585:"PW",586:"PK",591:"PA",598:"PG",600:"PY",604:"PE",608:"PH",616:"PL",620:"PT",624:"GW",626:"TL",630:"PR",634:"QA",642:"RO",643:"RU",646:"RW",659:"KN",662:"LC",670:"VC",674:"SM",678:"ST",682:"SA",686:"SN",688:"RS",690:"SC",694:"SL",702:"SG",703:"SK",704:"VN",705:"SI",706:"SO",710:"ZA",716:"ZW",724:"ES",728:"SS",729:"SD",740:"SR",748:"SZ",752:"SE",756:"CH",760:"SY",762:"TJ",764:"TH",768:"TG",776:"TO",780:"TT",784:"AE",788:"TN",792:"TR",795:"TM",796:"TC",798:"TV",800:"UG",804:"UA",807:"MK",818:"EG",826:"GB",834:"TZ",840:"US",854:"BF",858:"UY",860:"UZ",862:"VE",882:"WS",887:"YE",894:"ZM","-99":"XK"},SUB_LISTS={auto:AUTO_SUBS,terr:TERR_SUBS,tcc:TCC_SUBS};let state={activeCats:new Set(["un"]),autoSubs:new Set,terrSubs:new Set,tccSubs:new Set,showUK:!1,preset:"strict_un",customFilter:null,tags:function(){const saved=localStorage.getItem("rl_tags");if(saved)try{return new Map(JSON.parse(saved))}catch(e){}const old=JSON.parse(localStorage.getItem("rl_visited")||"[]"),m=new Map;return old.forEach(n=>m.set(n,"been")),m}(),expanded:new Set,showStats:!0,sidebarOpen:!0};function getEntries(){return state.customFilter?DATA.filter(state.customFilter):DATA.filter(c=>"un"===c.cat&&state.activeCats.has("un")?!state.showUK||"United Kingdom"!==c.n:!!("observer"===c.cat&&state.activeCats.has("observer")||"auto"===c.cat&&state.activeCats.has("auto")&&state.autoSubs.has(c.sub)||"territory"===c.cat&&state.activeCats.has("territory")&&state.terrSubs.has(c.sub)||"tcc_sub"===c.cat&&state.activeCats.has("tcc_sub")&&state.tccSubs.has(c.sub)||"disputed"===c.cat&&state.activeCats.has("disputed")||"uk"===c.cat&&state.showUK))}function getVisitedActive(){const names=new Set(getEntries().map(e=>e.n));return new Set([...state.tags.entries()].filter(([v,t])=>names.has(v)&&"want"!==t).map(([v])=>v))}function savePresetState(){localStorage.setItem("rl_preset",JSON.stringify({preset:state.preset,cats:[...state.activeCats],showUK:state.showUK,autoSubs:[...state.autoSubs],terrSubs:[...state.terrSubs],tccSubs:[...state.tccSubs]}))}function applyPreset(k){state.preset=k;const p=PRESETS[k];p.filter?state.customFilter=p.filter:(state.customFilter=null,state.activeCats=new Set(p.cats||[]),state.showUK=p.cats?.includes("uk")||!1,p.all?(state.autoSubs=new Set(AUTO_SUBS),state.terrSubs=new Set(TERR_SUBS),state.tccSubs=new Set(TCC_SUBS)):(state.autoSubs=new Set,state.terrSubs=new Set,state.tccSubs=new Set)),savePresetState(),render()}function goCustom(){state.preset="custom",state.customFilter=null}function toggleCat(cat){goCustom(),state.activeCats.has(cat)?state.activeCats.delete(cat):(state.activeCats.add(cat),"auto"===cat&&0===state.autoSubs.size&&AUTO_SUBS.forEach(s=>state.autoSubs.add(s)),"territory"===cat&&0===state.terrSubs.size&&TERR_SUBS.forEach(s=>state.terrSubs.add(s)),"tcc_sub"===cat&&0===state.tccSubs.size&&TCC_SUBS.forEach(s=>state.tccSubs.add(s))),savePresetState(),render()}function toggleSub(group,sub){goCustom();const map={auto:"auto",terr:"territory",tcc:"tcc_sub"};state.activeCats.has(map[group])||state.activeCats.add(map[group]);const s=state[group+"Subs"];s.has(sub)?s.delete(sub):s.add(sub),savePresetState(),render()}function toggleAllSubs(group){goCustom();const catMap={auto:"auto",terr:"territory",tcc:"tcc_sub"},list=SUB_LISTS[group],s=state[group+"Subs"];s.size===list.length?(s.clear(),state.activeCats.delete(catMap[group])):(state.activeCats.has(catMap[group])||state.activeCats.add(catMap[group]),list.forEach(x=>s.add(x))),savePresetState(),render()}!function(){const saved=localStorage.getItem("rl_preset");if(saved)try{const p=JSON.parse(saved);p.preset&&(state.preset=p.preset),p.cats&&(state.activeCats=new Set(p.cats)),p.showUK&&(state.showUK=p.showUK),p.autoSubs&&(state.autoSubs=new Set(p.autoSubs)),p.terrSubs&&(state.terrSubs=new Set(p.terrSubs)),p.tccSubs&&(state.tccSubs=new Set(p.tccSubs)),state.preset&&PRESETS[state.preset]&&PRESETS[state.preset].filter&&(state.customFilter=PRESETS[state.preset].filter)}catch(e){}}();const TAG_COLORS={been:"#059669",want:"#3b82f6",live:"#f59e0b",lived:"#f97316"},TAG_LABELS={been:"Been",want:"Want",live:"Live",lived:"Lived"},TAG_ICONS={been:"✓",want:"★",live:"⌂",lived:"◈"},TAG_CYCLE=["been","want",null];let tagHintCount=parseInt(localStorage.getItem("rl_tag_hints")||"0");function toggleVisit(name,evt){if(viewingShared)return void showToast("Switch to your map to make changes");const current=state.tags.get(name),idx=TAG_CYCLE.indexOf(current||null),next=TAG_CYCLE[(idx+1)%TAG_CYCLE.length];next?state.tags.set(name,next):state.tags.delete(name),["England","Scotland","Wales","Northern Ireland"].includes(name)&&state.tags.has(name)&&state.tags.set("United Kingdom","been"),localStorage.setItem("rl_tags",JSON.stringify([...state.tags.entries()])),tagHintCount<5&&(showToast(next?TAG_ICONS[next]+" "+name+" → "+TAG_LABELS[next]:"✕ "+name+" cleared"),tagHintCount++,localStorage.setItem("rl_tag_hints",String(tagHintCount)));const tag=state.tags.get(name);document.querySelectorAll(".country-item").forEach(btn=>{const label=btn.querySelector(".country-name");if(label&&label.textContent===name){btn.className="country-item"+(tag?" tagged tag-"+tag:"");const check=btn.querySelector(".mini-check");check&&(check.className="mini-check"+(tag?" on":""),check.textContent=tag?TAG_ICONS[tag]:"",check.style.color=tag?TAG_COLORS[tag]:"");const badge=btn.querySelector(".tag-badge");if(tag){if(badge){badge.style.background=TAG_COLORS[tag]+"15";badge.style.color=TAG_COLORS[tag];badge.textContent=TAG_LABELS[tag]}else{const nb=document.createElement("span");nb.className="tag-badge";nb.style.background=TAG_COLORS[tag]+"15";nb.style.color=TAG_COLORS[tag];nb.textContent=TAG_LABELS[tag];const morBtn=btn.querySelector(".more-btn");morBtn?btn.insertBefore(nb,morBtn):btn.appendChild(nb)}}else badge&&badge.remove()}}),updateCounters(),updateMap(),updateAchievements(),checkEmailPrompt()}function setTag(name,tag){viewingShared?showToast("Switch to your map to make changes"):(tag?state.tags.set(name,tag):state.tags.delete(name),["England","Scotland","Wales","Northern Ireland"].includes(name)&&tag&&state.tags.set("United Kingdom","been"),localStorage.setItem("rl_tags",JSON.stringify([...state.tags.entries()])),render())}function toggleExpand(key){state.expanded.has(key)?state.expanded.delete(key):state.expanded.add(key),render()}let map,geoLayer,darkMode=JSON.parse(localStorage.getItem("rl_dark")||"false"),tileLayer=null;function toggleDark(){if(darkMode=!darkMode,localStorage.setItem("rl_dark",JSON.stringify(darkMode)),document.body.classList.toggle("dark",darkMode),document.getElementById("darkBtn").textContent=darkMode?"🌙":"☀️",tileLayer&&map){map.removeLayer(tileLayer);const url=darkMode?"https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png":"https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png";tileLayer=L.tileLayer(url,{maxZoom:19}).addTo(map),tileLayer.bringToBack()}geoLayer&&updateMap(),window._labelGroup&&window._updateMapLabels&&(window._labelGroup.clearLayers(),window._updateMapLabels())}function toggleSidebar(){state.sidebarOpen=!state.sidebarOpen;const sb=document.getElementById("sidebar"),btn=document.getElementById("openBtn");sb.classList.toggle("closed",!state.sidebarOpen),btn.classList.toggle("show",!state.sidebarOpen),setTimeout(()=>{map&&map.invalidateSize()},350)}function toggleStats(){state.showStats=!state.showStats,render()}function doSearch(){const t=document.getElementById("searchBox").value.toLowerCase(),box=document.getElementById("searchResults");if(!t)return void(box.innerHTML="");const activeNames=new Set(getEntries().map(e=>e.n)),results=DATA.filter(e=>e.n.toLowerCase().includes(t)).slice(0,15);if(!results.length)return void(box.innerHTML="");const CAT_LABELS={un:"UN",observer:"Observer",auto:"Autonomous",territory:"Territory",disputed:"Disputed",uk:"UK",tcc_sub:"TCC"};let html='<div class="country-list">';results.sort((a,b)=>a.n.localeCompare(b.n)).forEach(e=>{const isActive=activeNames.has(e.n);if(state.tags.get(e.n),e.n.replace(/'/g,"\\'"),isActive)html+=renderCountryItem(e);else{const catLabel=CAT_LABELS[e.cat]||e.cat,subLabel=e.sub?" · "+e.sub:"";html+=`<button class="country-item" style="opacity:.6" onclick="showToast('Enable ${catLabel}${subLabel} to track ${e.n}')"><span class="mini-check" style="color:#94a3b8">○</span><span class="country-name" style="color:#94a3b8;font-weight:500">${e.n}</span><span class="tag-badge" style="background:#f1f5f9;color:#94a3b8">${catLabel}${subLabel}</span></button>`}}),html+="</div>",box.innerHTML=html}function renderCountryItem(e){const tag=state.tags.get(e.n),cls="country-item"+(tag?" tagged tag-"+tag:""),icon=tag?TAG_ICONS[tag]:"",color=tag?TAG_COLORS[tag]:"",escaped=e.n.replace(/'/g,"\\'");return`<button class="${cls}" onclick="toggleVisit('${escaped}')" oncontextmenu="event.preventDefault();showInlineTagPicker(this,'${escaped}')"><span class="mini-check${tag?" on":""}" style="color:${color}">${icon}</span><span class="country-name" style="color:#1e293b;font-weight:500">${e.n}</span>${tag?`<span class="tag-badge" style="background:${color}15;color:${color}">${TAG_LABELS[tag]}</span>`:""}<span class="more-btn" onclick="event.stopPropagation();showInlineTagPicker(this.parentElement,'${escaped}')">⋯</span></button>`}function showInlineTagPicker(el,name){document.querySelectorAll(".inline-tag-picker").forEach(p=>p.remove());const current=state.tags.get(name),escaped=name.replace(/'/g,"\\'"),picker=document.createElement("div");picker.className="inline-tag-picker",picker.innerHTML=["been","want","live","lived"].map(t=>{const active=current===t;return`<button onclick="event.stopPropagation();setTag('${escaped}','${active?"":t}')" style="padding:3px 8px;border-radius:5px;border:1.5px solid ${TAG_COLORS[t]};background:${active?TAG_COLORS[t]:"transparent"};color:${active?"#fff":TAG_COLORS[t]};font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">${TAG_ICONS[t]} ${TAG_LABELS[t]}</button>`}).join("")+`<button onclick="event.stopPropagation();setTag('${escaped}',null)" style="padding:3px 6px;border-radius:5px;border:1px solid #e2e8f0;background:transparent;color:#94a3b8;font-size:10px;cursor:pointer;font-family:inherit">✕</button>`,el.after(picker),setTimeout(()=>{const close=()=>{picker.remove(),document.removeEventListener("click",close)};document.addEventListener("click",close)},10)}function renderCountryList(items){return items.length?`<div class="country-list">${[...items].sort((a,b)=>a.n.localeCompare(b.n)).map(e=>renderCountryItem(e)).join("")}</div>`:""}function renderUNByRegion(){const continents=["Africa","Asia","Europe","North America","South America","Oceania"],CCOL={Africa:"#f59e0b",Asia:"#ef4444",Europe:"#3b82f6","North America":"#22c55e","South America":"#8b5cf6",Oceania:"#06b6d4"};let html='<div style="margin:4px 0 6px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;overflow:hidden">';for(const cont of continents){const items=DATA.filter(c=>"un"===c.cat&&c.cont===cont&&!(state.showUK&&"United Kingdom"===c.n)).sort((a,b)=>a.n.localeCompare(b.n)),vCount=items.filter(e=>{const t=state.tags.get(e.n);return t&&"want"!==t}).length,ek="un_"+cont,isOpen=state.expanded.has(ek),color=CCOL[cont]||"#94a3b8";html+='<div style="border-bottom:1px solid #f1f5f9">',html+=`<button onclick="toggleExpand('${ek}')" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;background:${isOpen?color+"08":"#fff"};border:none;cursor:pointer;text-align:left;font-family:inherit;transition:background .1s">\n      <span style="font-size:11px;color:${color};font-weight:700;flex:1">${cont}</span>\n      <span style="font-size:10px;font-family:'Nunito',sans-serif;color:${vCount>0?"#059669":"#94a3b8"};font-weight:600">${vCount}/${items.length}</span>\n      <span style="font-size:11px;color:#cbd5e1;font-weight:600">${isOpen?"▴":"▾"}</span>\n    </button>`,isOpen&&(html+=items.map(e=>renderCountryItem(e)).join("")),html+="</div>"}return html+="</div>",html}function renderToggle(label,count,cat,color,isOn){return`<button class="toggle-row ${isOn?"on":""}" onclick="toggleCat('${cat}')">\n    <span class="toggle-check ${isOn?"on":""}" style="${isOn?`background:${color}`:""}">${isOn?"✓":""}</span>\n    <span class="toggle-label">${label}</span>\n    <span class="toggle-count">${count}</span>\n  </button>`}function renderSubGroup(groupKey,subs,catFilter,color){const subsSet=state[groupKey+"Subs"];let html='<div class="sub-area">';html+=`<button class="select-all" onclick="toggleAllSubs('${groupKey}')">${subsSet.size===subs.length?"Deselect all":"Select all"}</button>`;for(const sub of subs){const cnt=DATA.filter(c=>c.cat===catFilter&&c.sub===sub).length,isOn=subsSet.has(sub);if(html+=`<button class="sub-toggle ${isOn?"on":""}" onclick="toggleSub('${groupKey}','${sub.replace(/'/g,"\\'")}')">\n      <span class="sub-check ${isOn?"on":""}">${isOn?"✓":""}</span>\n      <span class="sub-label">${sub}</span>\n      <span class="sub-count">${cnt}</span>\n    </button>`,isOn&&state.expanded.has(groupKey+"_"+sub)&&(html+=renderCountryList(DATA.filter(c=>c.cat===catFilter&&c.sub===sub))),isOn){const ek=groupKey+"_"+sub;html+=`<button class="list-toggle" onclick="toggleExpand('${ek.replace(/'/g,"\\'")}')">${state.expanded.has(ek)?"▴ Hide countries":"▾ Show countries"}</button>`}}return html+="</div>",html}function updateCounters(){const entries=getEntries(),visitedActive=getVisitedActive(),total=entries.length,vCount=visitedActive.size,pct=total?Math.round(vCount/total*100):0;document.getElementById("visitCount").textContent=vCount,document.getElementById("totalCount").textContent=total,document.getElementById("totalPct").textContent=pct+"%",document.getElementById("totalBar").style.width=pct+"%",document.getElementById("mapCount").textContent=vCount,document.getElementById("mapTotal").textContent=total;const activeNames=new Set(entries.map(e=>e.n)),tagCounts={been:0,want:0,live:0,lived:0};state.tags.forEach((tag,name)=>{activeNames.has(name)&&tagCounts[tag]++});let bd="";if(tagCounts.been&&(bd+=`<span style="color:${TAG_COLORS.been}">✓ ${tagCounts.been} been</span>`),tagCounts.want&&(bd+=`<span style="color:${TAG_COLORS.want}">★ ${tagCounts.want} want</span>`),tagCounts.live&&(bd+=`<span style="color:${TAG_COLORS.live}">⌂ ${tagCounts.live} live</span>`),tagCounts.lived&&(bd+=`<span style="color:${TAG_COLORS.lived}">◈ ${tagCounts.lived} lived</span>`),document.getElementById("tagBreakdown").innerHTML=bd,state.showStats){const byC={};entries.forEach(e=>{byC[e.cont]||(byC[e.cont]={t:0,v:0,been:0,want:0,live:0,lived:0}),byC[e.cont].t++;const tag=state.tags.get(e.n);tag&&(byC[e.cont].v++,byC[e.cont][tag]++)});let sh="";Object.entries(byC).sort((a,b)=>b[1].t-a[1].t).forEach(([cont,s])=>{const p=s.t?Math.round(s.v/s.t*100):0,color=CONT_COLORS[cont]||"#94a3b8";let tagLine="";s.been&&(tagLine+=`<span style="color:${TAG_COLORS.been}">✓${s.been}</span> `),s.want&&(tagLine+=`<span style="color:${TAG_COLORS.want}">★${s.want}</span> `),s.live&&(tagLine+=`<span style="color:${TAG_COLORS.live}">⌂${s.live}</span> `),s.lived&&(tagLine+=`<span style="color:${TAG_COLORS.lived}">◈${s.lived}</span>`),sh+=`<div class="stat-card"><div class="stat-header"><span class="stat-cont" style="color:${color}">${CONT_EMOJI[cont]||""} ${cont}</span><div><span class="stat-nums">${s.v}/${s.t}</span><span class="stat-pct" style="color:${p>0?"#059669":"#94a3b8"};background:${p>0?"#ecfdf5":"#f1f5f9"}">${p}%</span></div></div>${tagLine?`<div style="font-size:10px;font-weight:600;font-family:'Nunito',sans-serif;margin-bottom:4px;display:flex;gap:6px">${tagLine}</div>`:""}<div class="stat-bar" style="background:${color}18"><div class="stat-bar-fill" style="width:${p}%;background:${color}"></div></div></div>`}),document.getElementById("statsArea").innerHTML=sh}}function updateAchievements(){const entries=getEntries(),vCount=getVisitedActive().size,visitedConts=new Set;entries.forEach(e=>{const t=state.tags.get(e.n);t&&"want"!==t&&visitedConts.add(e.cont)});let ah="";ACHIEVEMENTS.forEach(a=>{let earned=!1,progress="";if("allcont"===a.id){const activeContinents=new Set(entries.map(e=>e.cont).filter(c=>"Antarctica"!==c)),visitedCount=[...activeContinents].filter(c=>visitedConts.has(c)).length;earned=activeContinents.size>0&&visitedCount===activeContinents.size,progress=visitedCount+"/"+activeContinents.size}else if("caribbean"===a.id){const caribCount=CARIBBEAN.filter(n=>{const t=state.tags.get(n);return t&&"want"!==t}).length;earned=caribCount===CARIBBEAN.length,progress=caribCount+"/"+CARIBBEAN.length}else earned=vCount>=a.threshold,progress=Math.min(vCount,a.threshold)+"/"+a.threshold;ah+=`<div class="badge ${earned?"earned":""}" title="${a.desc} (${progress})"><span class="icon">${earned?a.icon:"🔒"}</span>${a.label}<span style="font-size:9px;color:${earned?"#92400e":"#94a3b8"};margin-left:3px">${progress}</span></div>`}),document.getElementById("achieveArea").innerHTML=ah}function render(){const scrollEl=document.querySelector(".sb-scroll"),scrollTop=scrollEl?scrollEl.scrollTop:0,entries=getEntries(),visitedActive=getVisitedActive(),total=entries.length,vCount=visitedActive.size,pct=total?Math.round(vCount/total*100):0;document.getElementById("visitCount").textContent=vCount,document.getElementById("totalCount").textContent=total,document.getElementById("totalPct").textContent=pct+"%",document.getElementById("totalBar").style.width=pct+"%",document.getElementById("mapCount").textContent=vCount,document.getElementById("mapTotal").textContent=total;const activeNamesR=new Set(entries.map(e=>e.n)),tagCountsR={been:0,want:0,live:0,lived:0};state.tags.forEach((tag,name)=>{activeNamesR.has(name)&&tagCountsR[tag]++});let bdR="";tagCountsR.been&&(bdR+=`<span style="color:${TAG_COLORS.been}">✓ ${tagCountsR.been} been</span>`),tagCountsR.want&&(bdR+=`<span style="color:${TAG_COLORS.want}">★ ${tagCountsR.want} want</span>`),tagCountsR.live&&(bdR+=`<span style="color:${TAG_COLORS.live}">⌂ ${tagCountsR.live} live</span>`),tagCountsR.lived&&(bdR+=`<span style="color:${TAG_COLORS.lived}">◈ ${tagCountsR.lived} lived</span>`),document.getElementById("tagBreakdown").innerHTML=bdR;const peekEl=document.getElementById("peekLabel");peekEl&&(peekEl.textContent=vCount+" / "+total+" — Tap to open");const presetObj=PRESETS[state.preset];document.getElementById("presetLabel").textContent=presetObj?presetObj.label:"Custom";let ph="";for(const[k,p]of Object.entries(PRESETS))ph+=`<button class="preset-btn ${state.preset===k?"active":""}" onclick="applyPreset('${k}')">${p.label}</button>`;document.getElementById("presetArea").innerHTML=ph;const visitedConts=new Set;entries.forEach(e=>{const t=state.tags.get(e.n);t&&"want"!==t&&visitedConts.add(e.cont)});let ah="";ACHIEVEMENTS.forEach(a=>{let earned=!1,progress="";if("allcont"===a.id){const activeContinents=new Set(entries.map(e=>e.cont).filter(c=>"Antarctica"!==c)),visitedCount=[...activeContinents].filter(c=>visitedConts.has(c)).length;earned=activeContinents.size>0&&visitedCount===activeContinents.size,progress=visitedCount+"/"+activeContinents.size}else if("caribbean"===a.id){const caribCount=CARIBBEAN.filter(n=>{const t=state.tags.get(n);return t&&"want"!==t}).length;earned=caribCount===CARIBBEAN.length,progress=caribCount+"/"+CARIBBEAN.length}else earned=vCount>=a.threshold,progress=Math.min(vCount,a.threshold)+"/"+a.threshold;ah+=`<div class="badge ${earned?"earned":""}" title="${a.desc} (${progress})"><span class="icon">${earned?a.icon:"🔒"}</span>${a.label}<span style="font-size:9px;color:${earned?"#92400e":"#94a3b8"};margin-left:3px">${progress}</span></div>`}),document.getElementById("achieveArea").innerHTML=ah;let th=`<div class="sec-label">DEFINITIONS & COUNTRIES</div>\n  <div style="padding:0 18px 8px;font-size:10px;color:#94a3b8;font-family:'Nunito',sans-serif;line-height:1.4">\n    <span style="font-weight:700">Tap a country to tag:</span>\n    <span style="color:${TAG_COLORS.been}">✓ Been</span> →\n    <span style="color:${TAG_COLORS.want}">★ Want</span> →\n    Clear<br/>\n    <span style="font-weight:700">Tap ⋯ for all options</span> including Live & Lived\n  </div>`;const unOn=state.activeCats.has("un");th+=renderToggle("UN Member States",193,"un","#22c55e",unOn),unOn&&(state.expanded.has("un_list")&&(th+=renderUNByRegion()),th+=`<button class="list-toggle" onclick="toggleExpand('un_list')">${state.expanded.has("un_list")?"▴ Hide continents":"▾ Show by continent"}</button>`);const obsOn=state.activeCats.has("observer");th+=renderToggle("UN Observers",2,"observer","#3b82f6",obsOn),obsOn&&(state.expanded.has("obs_list")&&(th+=renderCountryList(DATA.filter(c=>"observer"===c.cat))),th+=`<button class="list-toggle" onclick="toggleExpand('obs_list')">${state.expanded.has("obs_list")?"▴ Hide":"▾ Show countries"}</button>`),th+=`<div style="display:flex;align-items:center"><div style="flex:1">${renderToggle("Autonomous Regions",17,"auto","#f97316",state.activeCats.has("auto"))}</div><button class="expand-btn" onclick="toggleExpand('auto')">${state.expanded.has("auto")?"−":"+"}</button></div>`,state.expanded.has("auto")&&(th+=renderSubGroup("auto",AUTO_SUBS,"auto","#f97316"));const terrOn=state.activeCats.has("territory");th+=`<div style="display:flex;align-items:center"><div style="flex:1">${renderToggle("Overseas Territories",DATA.filter(c=>"territory"===c.cat).length,"territory","#a855f7",terrOn)}</div><button class="expand-btn" onclick="toggleExpand('terr')">${state.expanded.has("terr")?"−":"+"}</button></div>`,state.expanded.has("terr")&&(th+=renderSubGroup("terr",TERR_SUBS,"territory","#a855f7"));const dispOn=state.activeCats.has("disputed");th+=renderToggle("Disputed / De Facto",8,"disputed","#ef4444",dispOn),dispOn&&(state.expanded.has("disp_list")&&(th+=renderCountryList(DATA.filter(c=>"disputed"===c.cat))),th+=`<button class="list-toggle" onclick="toggleExpand('disp_list')">${state.expanded.has("disp_list")?"▴ Hide":"▾ Show countries"}</button>`),th+=`<button class="toggle-row ${state.showUK?"on":""}" onclick="goCustom();state.showUK=!state.showUK;savePresetState();render()">\n    <span class="toggle-check ${state.showUK?"on":""}" style="${state.showUK?"background:#06b6d4":""}">${state.showUK?"✓":""}</span>\n    <span class="toggle-label">UK Constituent Countries</span>\n    <span class="toggle-count">4</span>\n  </button>`,state.showUK&&(state.expanded.has("uk_list")&&(th+=renderCountryList(DATA.filter(c=>"uk"===c.cat))),th+=`<button class="list-toggle" onclick="toggleExpand('uk_list')">${state.expanded.has("uk_list")?"▴ Hide":"▾ Show countries"}</button>`);const tccOn=state.activeCats.has("tcc_sub");if(th+=`<div style="display:flex;align-items:center"><div style="flex:1">${renderToggle("TCC Sub-National Regions",DATA.filter(c=>"tcc_sub"===c.cat).length,"tcc_sub","#d946ef",tccOn)}</div><button class="expand-btn" onclick="toggleExpand('tcc')">${state.expanded.has("tcc")?"−":"+"}</button></div>`,state.expanded.has("tcc")&&(th+=renderSubGroup("tcc",TCC_SUBS,"tcc_sub","#d946ef")),document.getElementById("toggleArea").innerHTML=th,document.getElementById("statsArrow").textContent=state.showStats?"▾":"▸",state.showStats){const byC={};entries.forEach(e=>{byC[e.cont]||(byC[e.cont]={t:0,v:0,been:0,want:0,live:0,lived:0}),byC[e.cont].t++;const tag=state.tags.get(e.n);tag&&(byC[e.cont].v++,byC[e.cont][tag]++)});let sh="";Object.entries(byC).sort((a,b)=>b[1].t-a[1].t).forEach(([cont,s])=>{const p=s.t?Math.round(s.v/s.t*100):0,color=CONT_COLORS[cont]||"#94a3b8";let tagLine="";s.been&&(tagLine+=`<span style="color:${TAG_COLORS.been}">✓${s.been}</span> `),s.want&&(tagLine+=`<span style="color:${TAG_COLORS.want}">★${s.want}</span> `),s.live&&(tagLine+=`<span style="color:${TAG_COLORS.live}">⌂${s.live}</span> `),s.lived&&(tagLine+=`<span style="color:${TAG_COLORS.lived}">◈${s.lived}</span>`),sh+=`<div class="stat-card"><div class="stat-header"><span class="stat-cont" style="color:${color}">${CONT_EMOJI[cont]||""} ${cont}</span><div><span class="stat-nums">${s.v}/${s.t}</span><span class="stat-pct" style="color:${p>0?"#059669":"#94a3b8"};background:${p>0?"#ecfdf5":"#f1f5f9"}">${p}%</span></div></div>${tagLine?`<div style="font-size:10px;font-weight:600;font-family:'Nunito',sans-serif;margin-bottom:4px;display:flex;gap:6px">${tagLine}</div>`:""}<div class="stat-bar" style="background:${color}18"><div class="stat-bar-fill" style="width:${p}%;background:${color}"></div></div></div>`}),document.getElementById("statsArea").innerHTML=sh}else document.getElementById("statsArea").innerHTML="";doSearch();const scrollElAfter=document.querySelector(".sb-scroll");scrollElAfter&&(scrollElAfter.scrollTop=scrollTop),updateMap()}function fixAntimeridian(geom){function fixRing(coords){for(let i=1;i<coords.length;i++){let diff=coords[i][0]-coords[i-1][0];diff>180?coords[i][0]-=360:diff<-180&&(coords[i][0]+=360)}}function fixPolygon(rings){rings.forEach(fixRing)}geom&&("Polygon"===geom.type?fixPolygon(geom.coordinates):"MultiPolygon"===geom.type&&geom.coordinates.forEach(fixPolygon))}function initMap(){map=L.map("map",{zoomControl:!1,attributionControl:!1,minZoom:2,maxZoom:8,worldCopyJump:!0,preferCanvas:!0}).setView([20,0],2);const tileUrl=darkMode?"https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png":"https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png";tileLayer=L.tileLayer(tileUrl,{maxZoom:19}).addTo(map),L.control.zoom({position:"bottomright"}).addTo(map),L.control.attribution({position:"bottomleft",prefix:!1}).addAttribution('© <a href="https://carto.com">CARTO</a>').addTo(map);const labelMarkers=[];[{lat:54,lng:15,text:"Europe",minZ:2,maxZ:4,size:13},{lat:10,lng:22,text:"Africa",minZ:2,maxZ:4,size:14},{lat:42,lng:-100,text:"North America",minZ:2,maxZ:3,size:13},{lat:-15,lng:-58,text:"South America",minZ:2,maxZ:4,size:13},{lat:38,lng:80,text:"Asia",minZ:2,maxZ:4,size:15},{lat:-25,lng:135,text:"Australia",minZ:2,maxZ:4,size:12},{lat:-78,lng:0,text:"Antarctica",minZ:2,maxZ:4,size:11},{lat:25,lng:-40,text:"Atlantic Ocean",minZ:2,maxZ:4,size:11,italic:!0},{lat:0,lng:-140,text:"Pacific Ocean",minZ:2,maxZ:4,size:11,italic:!0},{lat:-20,lng:75,text:"Indian Ocean",minZ:2,maxZ:4,size:11,italic:!0},{lat:75,lng:-10,text:"Arctic Ocean",minZ:3,maxZ:5,size:10,italic:!0},{lat:35,lng:20,text:"Mediterranean Sea",minZ:4,maxZ:6,size:10,italic:!0},{lat:5,lng:105,text:"South China Sea",minZ:4,maxZ:6,size:9,italic:!0},{lat:55,lng:40,text:"Russia",minZ:3,maxZ:5,size:12},{lat:36,lng:103,text:"China",minZ:3,maxZ:5,size:12},{lat:22,lng:78,text:"India",minZ:3,maxZ:5,size:11},{lat:-3,lng:-53,text:"Brazil",minZ:3,maxZ:5,size:11},{lat:40,lng:-100,text:"United States",minZ:4,maxZ:6,size:11},{lat:58,lng:-96,text:"Canada",minZ:3,maxZ:5,size:11},{lat:62,lng:98,text:"Siberia",minZ:4,maxZ:6,size:10,italic:!0},{lat:-2,lng:23,text:"Congo",minZ:4,maxZ:6,size:10},{lat:25,lng:45,text:"Middle East",minZ:3,maxZ:5,size:10},{lat:-22,lng:24,text:"Southern Africa",minZ:4,maxZ:5,size:10},{lat:10,lng:8,text:"West Africa",minZ:4,maxZ:5,size:10},{lat:5,lng:115,text:"Southeast Asia",minZ:3,maxZ:5,size:10},{lat:48,lng:-3,text:"Western Europe",minZ:4,maxZ:5,size:10},{lat:50,lng:20,text:"Eastern Europe",minZ:4,maxZ:5,size:10},{lat:-10,lng:160,text:"Oceania",minZ:3,maxZ:5,size:10}].forEach(l=>{const isDark=darkMode,color=isDark?"rgba(255,255,255,0.45)":"rgba(30,41,59,0.4)",icon=L.divIcon({className:"map-label",html:`<span style="font-family:'Nunito',sans-serif;font-size:${l.size}px;font-weight:600;color:${color};${l.italic?"font-style:italic;":""}white-space:nowrap;pointer-events:none;text-shadow:${isDark?"0 1px 3px rgba(0,0,0,.6)":"0 1px 2px rgba(255,255,255,.8)"};letter-spacing:.03em">${l.text}</span>`,iconSize:[0,0],iconAnchor:[0,0]}),marker=L.marker([l.lat,l.lng],{icon:icon,interactive:!1});marker._labelData=l,labelMarkers.push(marker)});const labelGroup=L.layerGroup().addTo(map);function updateLabels(){const z=map.getZoom(),isDark=document.body.classList.contains("dark"),color=isDark?"rgba(255,255,255,0.45)":"rgba(30,41,59,0.4)",shadow=isDark?"0 1px 3px rgba(0,0,0,.6)":"0 1px 2px rgba(255,255,255,.8)";labelMarkers.forEach(m=>{const l=m._labelData;z>=l.minZ&&z<=l.maxZ?labelGroup.hasLayer(m)||(m.setIcon(L.divIcon({className:"map-label",html:`<span style="font-family:'Nunito',sans-serif;font-size:${l.size}px;font-weight:600;color:${color};${l.italic?"font-style:italic;":""}white-space:nowrap;pointer-events:none;text-shadow:${shadow};letter-spacing:.03em">${l.text}</span>`,iconSize:[0,0],iconAnchor:[0,0]})),labelGroup.addLayer(m)):labelGroup.removeLayer(m)})}map.on("zoomend",updateLabels),window._updateMapLabels=updateLabels,window._labelGroup=labelGroup,updateLabels(),fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(r=>r.json()).then(topo=>{const geo=topojson.feature(topo,topo.objects.countries);geo.features.forEach(f=>{fixAntimeridian(f.geometry)}),buildGeoLayer(geo)})}function getCountryStyle(feature){const iso=NUM_TO_ISO[String(feature.id)],entry=iso?DATA.find(c=>c.iso===iso):null,entries=getEntries(),activeISOs=new Set(entries.map(e=>e.iso).filter(Boolean)),isActive=iso&&activeISOs.has(iso),tag=entry?state.tags.get(entry.n):null,isTagged=tag&&isActive;return darkMode?{fillColor:isTagged?{been:"#059669",want:"#3b82f6",live:"#f59e0b",lived:"#f97316"}[tag]:isActive?"#475569":"#1e293b",fillOpacity:isTagged?.8:isActive?.5:.3,color:isTagged?{been:"#34d399",want:"#60a5fa",live:"#fbbf24",lived:"#fb923c"}[tag]:"rgba(51,65,85,0.6)",weight:isTagged?1.5:.5}:{fillColor:isTagged?{been:"#059669",want:"#3b82f6",live:"#f59e0b",lived:"#f97316"}[tag]:isActive?"#94a3b8":"#dde4ed",fillOpacity:isTagged?.7:isActive?.4:.2,color:isTagged?{been:"#047857",want:"#2563eb",live:"#d97706",lived:"#ea580c"}[tag]:"rgba(255,255,255,0.6)",weight:isTagged?1.5:.5}}function buildGeoLayer(geo){window._geoData=geo,geoLayer=L.geoJSON(geo,{style:getCountryStyle,onEachFeature:(feature,layer)=>{const iso=NUM_TO_ISO[String(feature.id)],entry=iso?DATA.find(c=>c.iso===iso):null;entry&&layer.bindTooltip(`<b>${entry.n}</b><br/>${entry.cont}`,{sticky:!0}),layer.on("click",e=>{const entries=getEntries(),activeISOs=new Set(entries.map(e=>e.iso).filter(Boolean));if(entry&&activeISOs.has(iso)){const currentTag=state.tags.get(entry.n),escaped=entry.n.replace(/'/g,"\\'"),popupHtml=`<div style="text-align:center;font-family:'Nunito',sans-serif;min-width:180px">\n            <div style="font-weight:800;font-size:15px;margin-bottom:8px">${entry.n}</div>\n            <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap">\n              ${["been","want","live","lived"].map(t=>{const active=currentTag===t;return`<button onclick="setTag('${escaped}','${active?"":t}');map.closePopup()" style="padding:4px 10px;border-radius:6px;border:1.5px solid ${TAG_COLORS[t]};background:${active?TAG_COLORS[t]:"#fff"};color:${active?"#fff":TAG_COLORS[t]};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s">${TAG_ICONS[t]} ${TAG_LABELS[t]}</button>`}).join("")}\n            </div>\n            ${currentTag?`<button onclick="setTag('${escaped}',null);map.closePopup()" style="margin-top:6px;padding:2px 10px;border-radius:4px;border:1px solid #e2e8f0;background:#fff;color:#94a3b8;font-size:10px;cursor:pointer;font-family:inherit">Clear</button>`:""}\n          </div>`;L.popup({closeButton:!0,className:"tag-popup"}).setLatLng(e.latlng).setContent(popupHtml).openOn(map)}}),layer.on("mouseover",()=>{const entries=getEntries();new Set(entries.map(e=>e.iso).filter(Boolean)).has(iso)&&layer.setStyle({fillOpacity:.65,weight:2})}),layer.on("mouseout",()=>{layer.setStyle(getCountryStyle(feature))})}}).addTo(map);
-// Crimea overlay - shown as Ukrainian territory (disputed)
-const crimeaCoords=[[45.3,33.6],[45.2,36.6],[44.4,36.6],[44.3,33.5],[45.0,32.5],[45.3,33.6]];
-const crimeaLayer=L.polygon(crimeaCoords,{
-  fillColor:"#94a3b8",fillOpacity:0.15,color:"rgba(100,116,139,0.4)",weight:1,dashArray:"4,4"
-}).addTo(map);
-crimeaLayer.bindTooltip("<b>Crimea</b><br/>Internationally recognized as Ukraine<br/>(currently occupied by Russia)",{sticky:true});
-crimeaLayer.on("click",e=>{
-  const entries=getEntries(),activeISOs=new Set(entries.map(e=>e.iso).filter(Boolean));
-  if(activeISOs.has("UA")){
-    const currentTag=state.tags.get("Ukraine"),escaped="Ukraine",
-    popupHtml=`<div style="text-align:center;font-family:'Nunito',sans-serif;min-width:200px"><div style="font-weight:800;font-size:15px;margin-bottom:4px">Ukraine</div><div style="font-size:10px;color:#94a3b8;margin-bottom:8px">Crimea is part of Ukraine</div><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap">${["been","want","live","lived"].map(t=>{const active=currentTag===t;return`<button onclick="setTag('${escaped}','${active?"":t}');map.closePopup()" style="padding:4px 10px;border-radius:6px;border:1.5px solid ${TAG_COLORS[t]};background:${active?TAG_COLORS[t]:"#fff"};color:${active?"#fff":TAG_COLORS[t]};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">${TAG_ICONS[t]} ${TAG_LABELS[t]}</button>`}).join("")}</div>${currentTag?`<button onclick="setTag('${escaped}',null);map.closePopup()" style="margin-top:6px;padding:2px 10px;border-radius:4px;border:1px solid #e2e8f0;background:#fff;color:#94a3b8;font-size:10px;cursor:pointer;font-family:inherit">Clear</button>`:""}</div>`;
-    L.popup({closeButton:true,className:"tag-popup"}).setLatLng(e.latlng).setContent(popupHtml).openOn(map);
-  }
-});
-window._crimeaLayer=crimeaLayer;
-// Small island dot markers for countries too small to click on the map
-const SMALL_ISLANDS=[
-  {n:"Malta",iso:"MT",lat:35.9,lng:14.4},
-  {n:"Maldives",iso:"MV",lat:3.2,lng:73.2},
-  {n:"Singapore",iso:"SG",lat:1.35,lng:103.82},
-  {n:"Bahrain",iso:"BH",lat:26.0,lng:50.55},
-  {n:"Monaco",iso:"MC",lat:43.74,lng:7.4},
-  {n:"San Marino",iso:"SM",lat:43.94,lng:12.46},
-  {n:"Liechtenstein",iso:"LI",lat:47.14,lng:9.55},
-  {n:"Andorra",iso:"AD",lat:42.5,lng:1.52},
-  {n:"Vatican City",iso:"VA",lat:41.90,lng:12.45},
-  {n:"Tuvalu",iso:"TV",lat:-8.52,lng:179.2},
-  {n:"Nauru",iso:"NR",lat:-0.53,lng:166.93},
-  {n:"Palau",iso:"PW",lat:7.51,lng:134.58},
-  {n:"Marshall Islands",iso:"MH",lat:7.1,lng:171.4},
-  {n:"Micronesia",iso:"FM",lat:6.88,lng:158.23},
-  {n:"Kiribati",iso:"KI",lat:1.87,lng:172.97},
-  {n:"Comoros",iso:"KM",lat:-11.7,lng:43.33},
-  {n:"São Tomé and Príncipe",iso:"ST",lat:0.19,lng:6.61},
-  {n:"Cape Verde",iso:"CV",lat:16.0,lng:-24.0},
-  {n:"Cabo Verde",iso:"CV",lat:16.0,lng:-24.0},
-  {n:"Seychelles",iso:"SC",lat:-4.68,lng:55.49},
-  {n:"Mauritius",iso:"MU",lat:-20.28,lng:57.55},
-  {n:"Vanuatu",iso:"VU",lat:-15.38,lng:166.96},
-  {n:"Samoa",iso:"WS",lat:-13.76,lng:-172.1},
-  {n:"Tonga",iso:"TO",lat:-21.18,lng:-175.2},
-  {n:"Grenada",iso:"GD",lat:12.12,lng:-61.68},
-  {n:"Barbados",iso:"BB",lat:13.19,lng:-59.54},
-  {n:"Saint Lucia",iso:"LC",lat:13.91,lng:-60.98},
-  {n:"Saint Vincent and the Grenadines",iso:"VC",lat:13.25,lng:-61.2},
-  {n:"Antigua and Barbuda",iso:"AG",lat:17.07,lng:-61.8},
-  {n:"Dominica",iso:"DM",lat:15.41,lng:-61.37},
-  {n:"Saint Kitts and Nevis",iso:"KN",lat:17.36,lng:-62.78},
+import { useState, useMemo, useEffect, useCallback } from "react";
+
+// ── Shared style values ───────────────────────────────────────────────────────
+const S = {
+  sans: "'DM Sans','Segoe UI',sans-serif",
+  mono: "'Space Mono',monospace",
+  bg:   "#080c12",
+  bg1:  "#0b1118",
+  bg2:  "#0d1520",
+  bg3:  "#0d1a26",
+  bdr:  "#1e2d3d",
+  bdr2: "#1a2535",
+  dim:  "#4a6278",
+  dim2: "#2e4560",
+  txt:  "#e2e8f0",
+  txt2: "#7a8fa3",
+  acc:  "#38bdf8",
+  grn:  "#22c55e",
+  red:  "#ef4444",
+};
+
+
+const FINNHUB_KEY = "d6ittn9r01qleu95i6tgd6ittn9r01qleu95i6u0";
+const FRED_KEY    = "d89c1f35b1f2338af784ee9599731d52";
+
+// Symbol maps
+const FH = (t) => ({ "BRK/B":"BRK.B","BTC":"BINANCE:BTCUSDT","ETH":"BINANCE:ETHUSDT" })[t] || t;
+const isCrypto = (t) => t === "BTC" || t === "ETH";
+
+// ── Finnhub: daily candles — free tier supports resolution=D ─────────────────
+// One call per ticker. 1 year of daily data covers all metrics.
+// 5Y sparkline uses sampled 1Y data (best available on free tier).
+async function fetchTicker(ticker) {
+  try {
+    const sym=FH(ticker);
+    const to=Math.floor(Date.now()/1000);
+    const from1y=to-Math.round(1.05*365*86400);
+    const ep=isCrypto(ticker)?"crypto":"stock";
+    const url=`https://finnhub.io/api/v1/${ep}/candle?symbol=${sym}&resolution=D&from=${from1y}&to=${to}&token=${FINNHUB_KEY}`;
+    const d=await (await fetch(url)).json();
+    if (d.s!=="ok"||!d.c?.length) return null;
+    const closes=d.c, stamps=d.t, n=closes.length;
+    const price=closes[n-1], prev=closes[n-2];
+    const now=Date.now()/1000;
+    const find=(cutoff)=>{ let i=stamps.findIndex(t=>t>=cutoff); return i<0?0:i; };
+    const pct=(i)=>closes[i]?((price-closes[i])/closes[i])*100:null;
+    // Sparkline from full year of daily data (~250 points → downsample to 80)
+    const step=Math.max(1,Math.floor(n/80));
+    const sparkRaw=[];
+    for(let i=0;i<n;i+=step) sparkRaw.push(closes[i]);
+    sparkRaw.push(price);
+    const sMin=Math.min(...sparkRaw), sMax=Math.max(...sparkRaw);
+    const spark=sMax>sMin?sparkRaw.map(v=>(v-sMin)/(sMax-sMin)):sparkRaw.map(()=>0.5);
+    return {
+      price, spark,
+      dailyPct: prev?((price-prev)/prev)*100:null,
+      ytdPct:   pct(find(new Date(new Date().getFullYear(),0,1).getTime()/1000)),
+      sixMoPct: pct(find(now-180*86400)),
+      oneyPct:  pct(find(now-365*86400)),
+      fiveyPct: null, // 5Y needs premium tier — shown as — for now
+    };
+  } catch(e) { console.error("fetchTicker",ticker,e?.message||e); return null; }
+}
+
+
+// ── Yahoo Finance: 5Y return only (free, supplements Finnhub) ────────────────
+const YF_SYM = (t) => ({"BRK/B":"BRK-B","BTC":"BTC-USD","ETH":"ETH-USD"})[t] || t;
+async function fetch5Y(ticker) {
+  try {
+    const url = "https://corsproxy.io/?url=" + encodeURIComponent(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${YF_SYM(ticker)}?interval=1mo&range=5y`
+    );
+    const d = await (await fetch(url)).json();
+    const closes = d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(Boolean);
+    if (!closes?.length) return null;
+    const first = closes[0], last = closes[closes.length-1];
+    return first ? ((last-first)/first)*100 : null;
+  } catch { return null; }
+}
+
+// ── FRED: generic series fetch (desc, most recent first) ──────────────────────
+async function fredSeries(id, limit=5) {
+  try {
+    const url=`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=${limit}&file_type=json`;
+    const d=await (await fetch(url)).json();
+    return (d.observations||[]).filter(o=>o.value!==".").map(o=>parseFloat(o.value));
+  } catch { return []; }
+}
+
+// ── FRED: yield curve ─────────────────────────────────────────────────────────
+async function fetchYieldCurve() {
+  const SERIES={"3M":"DGS3MO","2Y":"DGS2","5Y":"DGS5","10Y":"DGS10","30Y":"DGS30"};
+  const results={};
+  await Promise.all(Object.entries(SERIES).map(async ([label,id])=>{
+    const v=await fredSeries(id,3);
+    results[label]={ cur:v[0]??null, prev:v[1]??null };
+  }));
+  return results;
+}
+
+// ── FRED: macro regime data ───────────────────────────────────────────────────
+async function fetchMacroData() {
+  const [be,indpro,ff,cpi,m2,will,gdp,lei,ig,hy,cn,eu]=await Promise.all([
+    fredSeries("T10YIE",35),       // 10Y breakeven inflation, daily
+    fredSeries("INDPRO",6),        // industrial production
+    fredSeries("FEDFUNDS",2),      // fed funds rate
+    fredSeries("CPIAUCSL",14),     // CPI index 14mo for YoY
+    fredSeries("M2SL",14),         // M2 money supply 14mo
+    fredSeries("WILL5000INDFC",2), // Wilshire 5000 mkt cap ($B)
+    fredSeries("GDP",2),           // US nominal GDP ($B, quarterly)
+    fredSeries("USSLIND",7),       // Leading Economic Index
+    fredSeries("BAMLC0A0CM",2),    // IG credit OAS spread
+    fredSeries("BAMLH0A0HYM2",2),  // HY credit OAS spread
+    fredSeries("CHPMINDX",2),      // China Manufacturing PMI
+    fredSeries("GEPMI",2),         // Eurozone Composite PMI
+  ]);
+  const inflationRising = be.length>=30 ? be[0]>be[29] : null;
+  const growthRising    = indpro.length>=4 ? indpro[0]>indpro[3] : null;
+  const regime = (inflationRising===null||growthRising===null) ? null
+    : ( inflationRising&& growthRising) ? "Reflation"
+    : ( inflationRising&&!growthRising) ? "Stagflation"
+    : (!inflationRising&& growthRising) ? "Goldilocks"
+    : "Deflation";
+  const cpiYoY = cpi.length>=13 ? ((cpi[0]/cpi[12])-1)*100 : null;
+  const m2YoY  = m2.length>=13  ? ((m2[0]/m2[12])-1)*100  : null;
+  const m2Prev = m2.length>=14  ? ((m2[1]/m2[13])-1)*100  : null;
+  const realFF = (ff[0]!=null&&cpiYoY!=null) ? ff[0]-cpiYoY : null;
+  const buffett     = (will[0]&&gdp[0]) ? (will[0]/gdp[0])*100 : null;
+  const buffettPrev = (will[1]&&gdp[0]) ? (will[1]/gdp[0])*100 : null;
+  const leiChg = lei.length>=7 ? lei[0]-lei[6] : null;
+  return {
+    regime, inflationRising, growthRising,
+    fedFunds:ff[0]??null, fedFundsPrev:ff[1]??null, breakeven:be[0]??null,
+    cpiYoY, realFF,
+    m2YoY, m2Prev,
+    buffett, buffettPrev,
+    leiLatest:lei[0]??null, leiChg,
+    igSpread:ig[0]??null, igPrev:ig[1]??null,
+    hySpread:hy[0]??null, hyPrev:hy[1]??null,
+    cnPMI:cn[0]??null, cnPrev:cn[1]??null,
+    euPMI:eu[0]??null, euPrev:eu[1]??null,
+  };
+}
+
+// ── Dalio: tags favored in each regime ────────────────────────────────────────
+const REGIME_TAGS={
+  "Goldilocks": new Set(["Tech","Financials","Insurance","Healthcare","Consumer Staples","Industrial","Defense & Aerospace","Small Cap","Homebuilder"]),
+  "Reflation":  new Set(["Energy","Pipelines","Mining & Metals","Precious Metals","Streaming & Royalty","Copper","Land & Royalty","Agriculture","Farmland","International","Energy Transition","Uranium","REIT"]),
+  "Stagflation":new Set(["Precious Metals","Streaming & Royalty","Energy","Land & Royalty","Farmland","Agriculture","Copper","Uranium","Crypto"]),
+  "Deflation":  new Set(["Fixed Income","Healthcare","Consumer Staples","REIT","Water"]),
+};
+const REGIME_COLOR={"Goldilocks":"#22c55e","Reflation":"#f97316","Stagflation":"#ef4444","Deflation":"#3b82f6"};
+const REGIME_ASSETS={
+  "Goldilocks": "Equities · Credit · Growth stocks",
+  "Reflation":  "Commodities · EM · TIPS · Energy",
+  "Stagflation":"Gold · Commodities · Cash · TIPS",
+  "Deflation":  "Treasuries · Gold · Utilities",
+};
+function isInSeason(tags,regime){ if(!regime||!REGIME_TAGS[regime]) return false; return tags.some(t=>REGIME_TAGS[regime].has(t)); }
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function pctColor(v){ if(v==null) return "#4a6278"; return v>=0?"#22c55e":"#ef4444"; }
+function pctFmt(v)  { if(v==null) return "—"; return (v>=0?"+":"")+v.toFixed(2)+"%"; }
+
+// ── YieldCurve component ───────────────────────────────────────────────────────
+function YieldCurve({ yields }) {
+  const NODES=[["3M",10],["2Y",36],["5Y",62],["10Y",88],["30Y",114]];
+  const vals=NODES.map(([k])=>yields[k]?.cur).filter(v=>v!=null);
+  const sans="'DM Sans','Segoe UI',sans-serif", mono="'Space Mono',monospace";
+  if (vals.length<2) return <span style={{color:"#2e4560",fontSize:"11px"}}>Loading…</span>;
+  const H=44,W=124,pad=4;
+  const mn=Math.min(...vals)-0.05, mx=Math.max(...vals)+0.05;
+  const toY=v=>H-((v-mn)/(mx-mn))*(H-pad*2)-pad;
+  const pathD=NODES.map(([k,x],i)=>{ const v=yields[k]?.cur; if(v==null)return null; return `${i===0?"M":"L"}${x},${toY(v).toFixed(1)}`; }).filter(Boolean).join(" ");
+  const [twoY,tenY,threeM]=[yields["2Y"]?.cur,yields["10Y"]?.cur,yields["3M"]?.cur];
+  const s2s10=(twoY&&tenY)?tenY-twoY:null;
+  const s3m10=(threeM&&tenY)?tenY-threeM:null;
+  const shape=s2s10===null?"—":s2s10>0.5?"Normal ▲":s2s10<-0.1?"Inverted ▼":"Flat →";
+  const shapeColor=s2s10===null?"#4a6278":s2s10>0.5?"#22c55e":s2s10<-0.1?"#ef4444":"#f59e0b";
+  return (
+    <div style={{display:"flex",alignItems:"center",gap:"16px",flexWrap:"wrap"}}>
+      <svg width={W+20} height={H+20} style={{overflow:"visible"}}>
+        <path d={pathD} fill="none" stroke="#38bdf8" strokeWidth="1.5"/>
+        {NODES.map(([k,x])=>{
+          const v=yields[k]?.cur; if(v==null)return null;
+          const prev=yields[k]?.prev; const chg=prev!=null?v-prev:0;
+          return (
+            <g key={k}>
+              <circle cx={x} cy={toY(v)} r="2.5" fill="#38bdf8"/>
+              <text x={x} y={H+14} textAnchor="middle" fill="#4a6278" fontSize="8" fontFamily={S.sans}>{k}</text>
+              <text x={x} y={toY(v)-6} textAnchor="middle" fill="#94a3b8" fontSize="7.5" fontFamily={S.mono}>{v.toFixed(2)}</text>
+              {Math.abs(chg)>0.001&&<text x={x} y={toY(v)-15} textAnchor="middle" fill={chg>0?"#ef4444":"#22c55e"} fontSize="7" fontFamily={S.sans}>{chg>0?"+":""}{chg.toFixed(2)}</text>}
+            </g>
+          );
+        })}
+      </svg>
+      <div style={{display:"flex",flexDirection:"column",gap:"5px"}}>
+        <div>
+          <div style={{fontSize:"9px",color:"#4a6278",letterSpacing:"0.06em",fontFamily:S.sans}}>CURVE SHAPE</div>
+          <div style={{fontSize:"13px",fontWeight:700,color:shapeColor,fontFamily:S.mono}}>{shape}</div>
+        </div>
+        {s2s10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>2s/10s: <span style={{color:s2s10<0?"#ef4444":"#94a3b8"}}>{s2s10>=0?"+":""}{s2s10.toFixed(2)}%</span></div>}
+        {s3m10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>3m/10y: <span style={{color:s3m10<0?"#ef4444":"#94a3b8"}}>{s3m10>=0?"+":""}{s3m10.toFixed(2)}%</span></div>}
+      </div>
+    </div>
+  );
+}
+
+// ── Macro helpers ─────────────────────────────────────────────────────────────
+function arrow(cur, prev) {
+  if (cur==null||prev==null) return "";
+  return cur > prev ? " ↑" : cur < prev ? " ↓" : " →";
+}
+function signal(val, goodAbove, warnAbove) {
+  // Returns color: green / yellow / red
+  if (val==null) return S.dim;
+  if (goodAbove!=null && val>=goodAbove) return S.grn;
+  if (warnAbove!=null && val>=warnAbove) return "#f59e0b";
+  return S.red;
+}
+function MacroTile({ label, value, sub, color, wide }) {
+  return (
+    <div style={{ minWidth: wide?"160px":"110px", flex:"0 0 auto" }}>
+      <div style={{ fontSize:"8px", color:S.dim, letterSpacing:"0.07em", fontFamily:S.sans, marginBottom:"3px", whiteSpace:"nowrap" }}>{label}</div>
+      <div style={{ fontSize:"15px", fontWeight:700, color:color||S.txt, fontFamily:S.mono, lineHeight:1.2 }}>{value??<span style={{color:S.dim2}}>—</span>}</div>
+      {sub && <div style={{ fontSize:"9px", color:S.dim, fontFamily:S.sans, marginTop:"2px" }}>{sub}</div>}
+    </div>
+  );
+}
+function Divider() {
+  return <div style={{ width:"1px", background:S.bdr2, alignSelf:"stretch", margin:"0 4px" }} />;
+}
+
+// ── Dalio Regime Widget (unchanged logic) ─────────────────────────────────────
+function DalioRegime({ macro }) {
+  const { regime, inflationRising, growthRising } = macro||{};
+  const color=REGIME_COLOR[regime]||S.dim;
+  const assets=REGIME_ASSETS[regime]||"";
+  const QUADS=[["Stagflation",0,0],["Reflation",0,1],["Deflation",1,0],["Goldilocks",1,1]];
+  return (
+    <div style={{ minWidth:"220px" }}>
+      <div style={{ fontSize:"8px", color:S.dim, letterSpacing:"0.07em", marginBottom:"6px", fontFamily:S.sans }}>DALIO ECONOMIC MACHINE</div>
+      <div style={{ display:"flex", gap:"12px", alignItems:"flex-start" }}>
+        <div>
+          <div style={{ fontSize:"7px", color:S.dim2, textAlign:"center", marginBottom:"2px", fontFamily:S.sans, letterSpacing:"0.04em" }}>↑ INFLATION</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"2px", width:"108px" }}>
+            {QUADS.map(([r])=>{
+              const active=r===regime; const qc=REGIME_COLOR[r]||S.dim2;
+              return (
+                <div key={r} style={{ padding:"5px 4px", background:active?qc+"28":S.bg2, border:`1px solid ${active?qc:S.bdr2}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ fontSize:"7px", color:active?qc:S.dim2, fontFamily:S.mono, fontWeight:active?700:400, textAlign:"center", lineHeight:1.3 }}>{r.toUpperCase()}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginTop:"2px", borderTop:`1px solid ${S.bdr2}`, paddingTop:"1px" }}>
+            <span style={{ fontSize:"7px", color:S.dim2, fontFamily:S.sans }}>↓ Growth</span>
+            <span style={{ fontSize:"7px", color:S.dim2, fontFamily:S.sans }}>Growth ↑</span>
+          </div>
+        </div>
+        <div style={{ paddingTop:"2px" }}>
+          <div style={{ fontSize:"14px", fontWeight:700, color, fontFamily:S.mono, marginBottom:"3px" }}>{regime||<span style={{color:S.dim2,fontSize:"11px"}}>Loading…</span>}</div>
+          {regime&&<>
+            <div style={{ fontSize:"9px", color:S.dim, fontFamily:S.sans, marginBottom:"4px" }}>
+              Growth {growthRising?"↑":"↓"} · Inflation {inflationRising?"↑":"↓"}
+            </div>
+            <div style={{ fontSize:"9px", color:color+"cc", fontFamily:S.sans, lineHeight:1.5, maxWidth:"110px" }}>{assets}</div>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Full Macro Panel (2 rows) ─────────────────────────────────────────────────
+function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }) {
+  const m = macro || {};
+  // Row 1: Regime indicators
+  // Buffett: >140% expensive, 100-140 fair, <100 cheap
+  const buffColor = m.buffett==null ? S.dim : m.buffett>140 ? S.red : m.buffett>100 ? "#f59e0b" : S.grn;
+  const buffPctChg = (m.buffett&&m.buffettPrev) ? m.buffett-m.buffettPrev : null;
+  // Real FF: >2 tight (red), 0-2 neutral (yellow), <0 loose (green)
+  const realFFColor = m.realFF==null ? S.dim : m.realFF>2 ? S.red : m.realFF>0 ? "#f59e0b" : S.grn;
+  // ERP: S&P earnings yield (~1/26 fwd PE ≈ 3.8%) minus 10Y yield. Approx with breakeven
+  // We derive ERP = rough estimated earnings yield (use 4.2% as S&P proxy) - 10Y yield
+  const tenY = yields["10Y"]?.cur;
+  const snpEarnYield = 4.2; // approximate S&P 500 forward earnings yield (update manually or via finnhub later)
+  const erp = tenY!=null ? snpEarnYield - tenY : null;
+  const erpColor = erp==null ? S.dim : erp>2 ? S.grn : erp>0.5 ? "#f59e0b" : S.red;
+  // Credit spreads: IG normal <150bp, HY normal <400bp
+  const igColor = m.igSpread==null ? S.dim : m.igSpread<1.5 ? S.grn : m.igSpread<2.5 ? "#f59e0b" : S.red;
+  const hyColor = m.hySpread==null ? S.dim : m.hySpread<4   ? S.grn : m.hySpread<6   ? "#f59e0b" : S.red;
+  // Row 2: Cycle
+  const m2Color = m.m2YoY==null ? S.dim : Math.abs(m.m2YoY)<3 ? S.grn : Math.abs(m.m2YoY)<8 ? "#f59e0b" : S.red;
+  const leiColor = m.leiChg==null ? S.dim : m.leiChg>0 ? S.grn : m.leiChg>-1 ? "#f59e0b" : S.red;
+  const cnColor  = m.cnPMI==null ? S.dim  : m.cnPMI>52 ? S.grn : m.cnPMI>50 ? "#f59e0b" : S.red;
+  const euColor  = m.euPMI==null ? S.dim  : m.euPMI>52 ? S.grn : m.euPMI>50 ? "#f59e0b" : S.red;
+  const row = { display:"flex", alignItems:"flex-start", gap:"0", flexWrap:"wrap", borderBottom:`1px solid ${S.bdr2}`, paddingBottom:"14px", marginBottom:"14px" };
+  const gap = { width:"28px", flexShrink:0 };
+  return (
+    <div style={{ background:S.bg1, border:`1px solid ${S.bdr2}`, padding:"16px 20px", marginBottom:"20px" }}>
+
+      {/* Panel title row */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"14px" }}>
+        <div style={{ fontSize:"9px", color:S.dim, letterSpacing:"0.1em", fontFamily:S.sans }}>MACRO DASHBOARD — DALIO ALL-WEATHER VIEW</div>
+        <div style={{ fontSize:"9px", color:S.dim2, fontFamily:S.sans, textAlign:"right" }}>
+          {loading && progress < STOCKS.length && <span style={{ color:S.acc, marginRight:"8px" }}>Loading {progress}/{STOCKS.length}…</span>}
+          {lastUpdated && <span>{lastUpdated.toLocaleTimeString()} <span style={{ cursor:"pointer", color:loading?S.dim2:S.acc }} onClick={onRefresh}>{loading?"…":"↻"}</span></span>}
+        </div>
+      </div>
+
+      {/* Row 1: Valuations + Monetary */}
+      <div style={{ fontSize:"8px", color:S.dim2, letterSpacing:"0.08em", fontFamily:S.sans, marginBottom:"8px" }}>VALUATIONS &amp; MONETARY CONDITIONS</div>
+      <div style={row}>
+        <DalioRegime macro={m} />
+        <div style={gap}/>
+        <Divider/>
+        <div style={gap}/>
+        <MacroTile
+          label="BUFFETT INDICATOR (WILL5000/GDP)"
+          value={m.buffett!=null ? m.buffett.toFixed(0)+"%" : null}
+          sub={buffPctChg!=null ? `${buffPctChg>=0?"+":""}${buffPctChg.toFixed(1)}pp prev` : ">140% = expensive"}
+          color={buffColor}
+          wide
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="EQUITY RISK PREMIUM"
+          value={erp!=null ? (erp>=0?"+":"")+erp.toFixed(2)+"%" : null}
+          sub={tenY!=null ? `10Y: ${tenY.toFixed(2)}% · EY: ~${snpEarnYield}%` : "S&P earn yield − 10Y"}
+          color={erpColor}
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="FED FUNDS (NOMINAL)"
+          value={m.fedFunds!=null ? m.fedFunds.toFixed(2)+"%" : null}
+          sub={m.breakeven!=null ? `Breakeven: ${m.breakeven.toFixed(2)}%` : null}
+          color={S.txt}
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="REAL FED FUNDS RATE"
+          value={m.realFF!=null ? (m.realFF>=0?"+":"")+m.realFF.toFixed(2)+"%" : null}
+          sub={m.cpiYoY!=null ? `CPI YoY: ${m.cpiYoY.toFixed(1)}%` : "Nominal − CPI YoY"}
+          color={realFFColor}
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="IG CREDIT SPREAD"
+          value={m.igSpread!=null ? m.igSpread.toFixed(2)+"%" : null}
+          sub={m.igPrev!=null ? arrow(m.igSpread,m.igPrev)+" vs prev" : "OAS, <1.5% = tight"}
+          color={igColor}
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="HY CREDIT SPREAD"
+          value={m.hySpread!=null ? m.hySpread.toFixed(2)+"%" : null}
+          sub={m.hyPrev!=null ? arrow(m.hySpread,m.hyPrev)+" vs prev" : "OAS, <4% = tight"}
+          color={hyColor}
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="M2 YOY GROWTH"
+          value={m.m2YoY!=null ? (m.m2YoY>=0?"+":"")+m.m2YoY.toFixed(1)+"%" : null}
+          sub={m.m2Prev!=null ? `Prev: ${m.m2Prev>=0?"+":""}${m.m2Prev.toFixed(1)}%` : "Money supply"}
+          color={m2Color}
+        />
+      </div>
+
+      {/* Row 2: Yield Curve + Cycle */}
+      <div style={{ fontSize:"8px", color:S.dim2, letterSpacing:"0.08em", fontFamily:S.sans, marginBottom:"8px" }}>YIELD CURVE &amp; ECONOMIC CYCLE</div>
+      <div style={{ display:"flex", alignItems:"flex-start", gap:"0", flexWrap:"wrap" }}>
+        <div>
+          <div style={{ fontSize:"8px", color:S.dim, letterSpacing:"0.07em", marginBottom:"8px", fontFamily:S.sans }}>US TREASURY CURVE</div>
+          <YieldCurve yields={yields} />
+        </div>
+        <div style={gap}/>
+        <Divider/>
+        <div style={gap}/>
+        <MacroTile
+          label="LEADING ECON INDEX (LEI)"
+          value={m.leiLatest!=null ? m.leiLatest.toFixed(1) : null}
+          sub={m.leiChg!=null ? `6mo chg: ${m.leiChg>=0?"+":""}${m.leiChg.toFixed(1)}` : "USSLIND"}
+          color={leiColor}
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="CHINA MFG PMI"
+          value={m.cnPMI!=null ? m.cnPMI.toFixed(1) : null}
+          sub={m.cnPrev!=null ? arrow(m.cnPMI,m.cnPrev)+" vs prev · 50=neutral" : "50 = expansion"}
+          color={cnColor}
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="EUROZONE PMI"
+          value={m.euPMI!=null ? m.euPMI.toFixed(1) : null}
+          sub={m.euPrev!=null ? arrow(m.euPMI,m.euPrev)+" vs prev · 50=neutral" : "Composite"}
+          color={euColor}
+        />
+        <div style={gap}/>
+        <MacroTile
+          label="INDL PRODUCTION YOY"
+          value={m.growthRising!=null ? (m.growthRising?"Rising ↑":"Falling ↓") : null}
+          sub="INDPRO 3mo trend"
+          color={m.growthRising===true ? S.grn : m.growthRising===false ? S.red : S.dim}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Bucket structure ─────────────────────────────────────────────────────────
+const BUCKETS = [
+  { id: "commodities", label: "Commodities & Real Assets", emoji: "🪨",
+    tags: ["Energy","Pipelines","Mining & Metals","Precious Metals","Streaming & Royalty","Uranium","Copper","Land & Royalty","Energy Transition"] },
+  { id: "food-water",  label: "Food & Water Security",     emoji: "🌾",
+    tags: ["Agriculture","Water","Farmland"] },
+  { id: "core",        label: "Core Equities",             emoji: "💻",
+    tags: ["Tech","Healthcare","Consumer Staples","Financials","Insurance"] },
+  { id: "industrial",  label: "Industrials & Defense",     emoji: "🏭",
+    tags: ["Defense & Aerospace","Industrial","Homebuilder"] },
+  { id: "reits",       label: "REITs",                     emoji: "🏢",
+    tags: ["Net Lease","Retail REIT","Industrial REIT","Residential REIT","Experiential REIT","Healthcare REIT"] },
+  { id: "global",      label: "Global & Macro",            emoji: "🌍",
+    tags: ["International","Small Cap"] },
+  { id: "income",      label: "Income & Alternatives",     emoji: "💵",
+    tags: ["Fixed Income","ETF","Crypto"] },
 ];
-const islandMarkers=[];
-function buildIslandMarkers(){
-  islandMarkers.forEach(m=>map.removeLayer(m));
-  islandMarkers.length=0;
-  const entries=getEntries(),activeNames=new Set(entries.map(e=>e.n));
-  SMALL_ISLANDS.forEach(island=>{
-    const entry=DATA.find(d=>d.n===island.n);
-    if(!entry||!activeNames.has(island.n))return;
-    const tag=state.tags.get(island.n);
-    const colors={been:"#059669",want:"#3b82f6",live:"#f59e0b",lived:"#f97316"};
-    const fillColor=tag?colors[tag]:(darkMode?"#475569":"#94a3b8");
-    const marker=L.circleMarker([island.lat,island.lng],{
-      radius:5,fillColor:fillColor,color:"#fff",weight:1.5,fillOpacity:tag?0.9:0.6,interactive:true
-    }).addTo(map);
-    const tagInfo=tag?` · <span style="color:${colors[tag]}">${TAG_ICONS[tag]} ${TAG_LABELS[tag]}</span>`:"";
-    marker.bindTooltip(`<b>${island.n}</b><br/>${entry.cont}${tagInfo}`,{sticky:true});
-    marker.on("click",e=>{
-      const currentTag=state.tags.get(island.n),escaped=island.n.replace(/'/g,"\'");
-      const popupHtml=`<div style="text-align:center;font-family:'Nunito',sans-serif;min-width:180px"><div style="font-weight:800;font-size:15px;margin-bottom:8px">${island.n}</div><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap">${["been","want","live","lived"].map(t=>{const active=currentTag===t;return`<button onclick="setTag('${escaped}','${active?"":t}');map.closePopup()" style="padding:4px 10px;border-radius:6px;border:1.5px solid ${TAG_COLORS[t]};background:${active?TAG_COLORS[t]:'#fff'};color:${active?'#fff':TAG_COLORS[t]};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">${TAG_ICONS[t]} ${TAG_LABELS[t]}</button>`}).join("")}</div>${currentTag?`<button onclick="setTag('${escaped}',null);map.closePopup()" style="margin-top:6px;padding:2px 10px;border-radius:4px;border:1px solid #e2e8f0;background:#fff;color:#94a3b8;font-size:10px;cursor:pointer;font-family:inherit">Clear</button>`:""}</div>`;
-      L.popup({closeButton:true,className:"tag-popup"}).setLatLng(e.latlng).setContent(popupHtml).openOn(map);
-    });
-    islandMarkers.push(marker);
+
+const TAG_COLORS = {
+  "Tech":"#3b82f6","Energy":"#f97316","Pipelines":"#d97706","Mining & Metals":"#a8a29e",
+  "Precious Metals":"#eab308","Streaming & Royalty":"#ca8a04","Uranium":"#84cc16",
+  "Copper":"#ea580c","Agriculture":"#16a34a","Water":"#06b6d4","Farmland":"#15803d",
+  "REIT":"#a855f7","Net Lease":"#9333ea","Retail REIT":"#c026d3","Industrial REIT":"#7c3aed","Residential REIT":"#8b5cf6","Experiential REIT":"#a21caf","Healthcare REIT":"#d946ef","Defense & Aerospace":"#ef4444","Industrial":"#64748b",
+  "Financials":"#2563eb","Insurance":"#1d4ed8","Healthcare":"#ec4899",
+  "Consumer Staples":"#0d9488","International":"#6366f1","Energy Transition":"#65a30d",
+  "Homebuilder":"#b45309","Land & Royalty":"#d97706","Fixed Income":"#475569",
+  "Small Cap":"#8b5cf6","Crypto":"#f59e0b","ETF":"#52525b",
+};
+
+// Account preference
+const ACCT = { T: "Pre-Tax (401k)", R: "Roth", B: "Taxable", A: "Any" };
+const ACCT_COLOR = { T:"#f59e0b", R:"#22c55e", B:"#38bdf8", A:"#6b7280" };
+
+// entry:[lo,hi] acct:T=401k R=Roth B=Taxable A=Any
+const THESIS = {
+  "AAPL":  {t:"Consumer ecosystem + services flywheel; buy on dips.",                            e:[230,255],  a:"B"},
+  "ABBV":  {t:"Humira cliff priced in; Skyrizi/Rinvoq building new revenue floor.",              e:[195,215],  a:"B"},
+  "ADC":   {t:"Net lease REIT, best-in-class tenant quality; grocery/dollar anchor.",            e:[60,70],    a:"B"},
+  "AFL":   {t:"Supplemental insurance moat Japan/US; steady dividend grower.",                   e:[95,110],   a:"B"},
+  "AMZN":  {t:"AWS + advertising = high-margin engines; retail optionality.",                    e:[170,195],  a:"B"},
+  "AVB":   {t:"Coastal apartment REIT; supply-constrained markets, strong NOI growth.",         e:[180,210],  a:"B"},
+  "AWK":   {t:"Water utility monopoly; inflation-linked rate base growth.",                      e:[115,135],  a:"B"},
+  "BABA":  {t:"Deep value China tech; speculative, geopolitical risk acknowledged.",             e:[90,120],   a:"B"},
+  "BHP":   {t:"Diversified mining giant — copper/iron/potash, strong dividend.",                 e:[55,68],    a:"B"},
+  "BN":    {t:"Brookfield asset management; compounding fee streams + real asset upside.",       e:[38,44],    a:"B"},
+  "BP":    {t:"Transition energy at value; dividend support, undervalued vs peers.",             e:[30,36],    a:"B"},
+  "BRK/B": {t:"Forever hold — Buffett capital allocation + diversified quality compounder.",     e:[430,480],  a:"B"},
+  "BTC":   {t:"Digital gold — store of value, institutional adoption, fixed supply.",            e:[60000,80000],a:"R"},
+  "CAH":   {t:"Healthcare distribution oligopoly; undervalued, strong FCF, buybacks.",          e:[180,210],  a:"B"},
+  "CAT":   {t:"Infrastructure + global construction supercycle; pricing power proven.",          e:[310,350],  a:"B"},
+  "CCJ":   {t:"Uranium supply deficit + nuclear renaissance for AI data centers.",               e:[40,50],    a:"R"},
+  "CF":    {t:"Pure nitrogen play; US nat gas cost advantage, European capacity offline.",       e:[65,80],    a:"B"},
+  "CHD":   {t:"Recession-resistant staples compounder; Church & Dwight brand portfolio.",       e:[90,105],   a:"B"},
+  "CTVA":  {t:"Seed genetics IP moat — one of four global holders; precision ag tailwind.",     e:[52,62],    a:"B"},
+  "CVX":   {t:"Integrated oil major — Permian + LNG + Tengiz; strong capital returns.",         e:[135,155],  a:"B"},
+  "DE":    {t:"Farm equipment + AI/autonomy subscription business; durable pricing power.",     e:[380,440],  a:"B"},
+  "DBC":   {t:"Broad commodity ETF — inflation hedge + real asset diversification.",            e:[22,26],    a:"B"},
+  "ECL":   {t:"Industrial water efficiency moat; pricing power, 30yr dividend growth.",         e:[215,245],  a:"B"},
+  "EPR":   {t:"Experiential REIT (theaters/education); high yield, COVID survivor.",             e:[42,52],    a:"B"},
+  "EQR":   {t:"Coastal apartment REIT; high-quality residential, urban rent recovery.",         e:[58,68],    a:"B"},
+  "ESS":   {t:"West Coast multifamily; supply-constrained markets, strong demographics.",       e:[240,270],  a:"B"},
+  "ETH":   {t:"Programmable money + DeFi; post-merge yield + network effect.",                  e:[2500,3500],a:"R"},
+  "FCX":   {t:"Largest public copper producer; EV/grid/AI demand, 15yr mine timeline.",         e:[35,45],    a:"B"},
+  "FNV":   {t:"Gold streaming royalty — no operating risk, infinite mine life optionality.",    e:[220,255],  a:"B"},
+  "FPI":   {t:"US farmland REIT — finite productive land vs infinite food demand.",              e:[10,13],    a:"B"},
+  "FRT":   {t:"Dividend King REIT — 55yr consecutive increases; mixed-use urban centers.",      e:[85,100],   a:"B"},
+  "GE":    {t:"Aerospace pure-play; jet engine aftermarket = durable recurring revenue.",       e:[150,175],  a:"B"},
+  "GEV":   {t:"Grid infrastructure + offshore wind; energy transition pick-and-shovel.",        e:[200,250],  a:"B"},
+  "GOLD":  {t:"World's largest gold miner by reserves; Tier 1 mines, gold price leverage.",     e:[16,20],    a:"B"},
+  "GOOGL": {t:"Search moat + cloud + AI integration; reasonable valuation vs megacap peers.",   e:[155,185],  a:"B"},
+  "IAU":   {t:"Physical gold — inflation, dollar weakness, geopolitical tail risk hedge.",      e:[38,44],    a:"B"},
+  "IBM":   {t:"Hybrid cloud + AI enterprise (watsonx); steady dividend, turnaround building.",  e:[195,220],  a:"B"},
+  "IEF":   {t:"7-10yr Treasuries — recession hedge, negative equity correlation in stress.",    e:[90,97],    a:"T"},
+  "IJR":   {t:"S&P 600 small-cap; quality screen outperforms raw Russell 2000.",                e:[100,115],  a:"R"},
+  "JPM":   {t:"Best-in-class bank — fortress balance sheet, Dimon capital discipline.",         e:[210,240],  a:"B"},
+  "KIM":   {t:"Grocery-anchored REIT; defensive tenant mix, mixed-use redevelopment.",         e:[20,24],    a:"B"},
+  "KMI":   {t:"Largest nat gas pipeline network US; toll-road model, rising dividend.",         e:[23,28],    a:"B"},
+  "KRG":   {t:"Open-air retail REIT; grocery-anchored centers, Inland merger upside.",         e:[21,25],    a:"B"},
+  "LEN":   {t:"Homebuilder asset-light pivot; rate-sensitive, buy on mortgage rate relief.",    e:[95,115],   a:"B"},
+  "LMT":   {t:"Defense spending cycle + F-35 global demand; mission-critical pricing power.",   e:[420,470],  a:"B"},
+  "META":  {t:"Social advertising duopoly + AI infra; FCF machine.",                            e:[530,610],  a:"B"},
+  "MSFT":  {t:"Azure cloud + Copilot AI monetization; highest-quality compounder in tech.",     e:[360,400],  a:"B"},
+  "NEM":   {t:"Largest gold miner — gold price leverage + Newcrest synergies unwinding.",       e:[38,48],    a:"B"},
+  "NFLX":  {t:"Streaming market share leader; ad tier monetization + live content expansion.",  e:[750,900],  a:"B"},
+  "NNN":   {t:"Triple-net lease — 34yr consecutive dividend growth, defensive retail.",         e:[38,44],    a:"B"},
+  "NTR":   {t:"Potash oligopoly; Russia/Belarus sanctions = structural supply constraint.",      e:[48,58],    a:"B"},
+  "NVDA":  {t:"AI compute monopoly — data center GPU dominance; valuation demanding.",          e:[95,125],   a:"R"},
+  "O":     {t:"Monthly dividend aristocrat — 30yr track record, global net lease.",             e:[52,62],    a:"B"},
+  "OHI":   {t:"Healthcare REIT — SNF/senior housing; high yield, watch coverage ratios.",       e:[32,38],    a:"B"},
+  "OKE":   {t:"ONEOK/Magellan merger creates fee-based midstream giant.",                       e:[70,82],    a:"B"},
+  "PFE":   {t:"Post-COVID trough valuation; pipeline optionality + Seagen oncology.",          e:[22,27],    a:"B"},
+  "PG":    {t:"Consumer staples compounder; pricing power proven through inflation cycle.",     e:[150,170],  a:"B"},
+  "QCOM":  {t:"Semiconductor diversification beyond mobile; auto/IoT revenue mix shift.",       e:[120,145],  a:"R"},
+  "REXR":  {t:"Southern CA industrial REIT; irreplaceable infill locations, e-commerce.",       e:[30,38],    a:"B"},
+  "RTX":   {t:"Defense + commercial aerospace; Pratt aftermarket + missile systems demand.",    e:[115,135],  a:"B"},
+  "SGOV":  {t:"Ultra-short Treasury buffer — earns yield while waiting for deployment.",        e:[100,100],  a:"B"},
+  "SPG":   {t:"Dominant mall REIT; premium centers resilient, international growth.",           e:[155,180],  a:"B"},
+  "STAG":  {t:"Industrial/logistics REIT — monthly dividend, e-commerce demand.",               e:[33,38],    a:"B"},
+  "TGT":   {t:"Retail at trough; inventory cycle normalizing, loyal customer base.",            e:[95,115],   a:"B"},
+  "TFPM":  {t:"Triple Flag streaming — base metals, 4 consecutive 5% dividend hikes.",         e:[16,20],    a:"B"},
+  "TPL":   {t:"Permian Basin toll road — land + water royalties, essentially zero cost.",       e:[400,480],  a:"B"},
+  "TSLA":  {t:"EV market share + energy storage; hold position size disciplined.",              e:[220,280],  a:"R"},
+  "UNM":   {t:"Group benefits insurer at value; disability + life insurance cash flows.",       e:[55,68],    a:"B"},
+  "VBR":   {t:"Small-cap value tilt; historically strong long-term factor premium.",            e:[195,220],  a:"R"},
+  "VEA":   {t:"Developed international at multi-decade discount; dollar weakness hedge.",       e:[45,55],    a:"B"},
+  "VICI":  {t:"Gaming/experiential REIT, investment-grade tenants; inflation-linked NNN.",      e:[26,30],    a:"B"},
+  "VT":    {t:"Total world equity — ideal custodial Roth, 50yr horizon, no bonds needed.",      e:null,       a:"R"},
+  "VWO":   {t:"Emerging markets — long-term demographic + growth tailwind.",                    e:[42,50],    a:"B"},
+  "WPM":   {t:"Silver/gold streaming — no mine operating risk, precious metals upside.",        e:[55,68],    a:"B"},
+  "XOM":   {t:"Integrated oil major; Permian dominance + Pioneer acquisition transformative.",  e:[100,120],  a:"B"},
+  "XYL":   {t:"Water infrastructure tech — municipal capex cycle, climate resilience.",         e:[100,120],  a:"B"},
+};
+// Accessors
+const getTh = (k) => THESIS[k]?.t || null;
+const getEn = (k) => THESIS[k]?.e || null;
+const getAc = (k) => THESIS[k]?.a || "A";
+
+
+// ── Stock list ───────────────────────────────────────────────────────────────
+const STOCKS = [
+ { ticker:"AAPL", name:"Apple Inc", tags:["Tech"] },
+ { ticker:"CVX", name:"Chevron Corp", tags:["Energy"] },
+ { ticker:"GOLD", name:"Barrick Gold Corp", tags:["Precious Metals","Mining & Metals"] },
+ { ticker:"NVDA", name:"NVIDIA Corp", tags:["Tech"] },
+ { ticker:"ABBV", name:"AbbVie Inc", tags:["Healthcare"] },
+ { ticker:"ADC", name:"Agree Realty", tags:["Net Lease"] },
+ { ticker:"AFL", name:"Aflac Inc", tags:["Financials","Insurance"] },
+ { ticker:"AMZN", name:"Amazon.com Inc", tags:["Tech"] },
+ { ticker:"AVB", name:"AvalonBay Communities", tags:["Residential REIT"] },
+ { ticker:"AWK", name:"American Water Works", tags:["Water"] },
+ { ticker:"BABA", name:"Alibaba Group ADR", tags:["Tech","International"] },
+ { ticker:"BHP", name:"BHP Group ADR", tags:["Mining & Metals","Copper","International"] },
+ { ticker:"BN", name:"Brookfield Corp", tags:["Financials","International"] },
+ { ticker:"BP", name:"BP PLC ADR", tags:["Energy","International"] },
+ { ticker:"BRK/B", name:"Berkshire Hathaway Cl B", tags:["Financials"] },
+ { ticker:"BTC", name:"Bitcoin", tags:["Crypto"] },
+ { ticker:"CAH", name:"Cardinal Health", tags:["Healthcare"] },
+ { ticker:"CAT", name:"Caterpillar Inc", tags:["Industrial","Agriculture"] },
+ { ticker:"CCJ", name:"Cameco Corp", tags:["Uranium","Energy Transition"] },
+ { ticker:"CF", name:"CF Industries", tags:["Agriculture"] },
+ { ticker:"CHD", name:"Church & Dwight", tags:["Consumer Staples"] },
+ { ticker:"CTVA", name:"Corteva Inc", tags:["Agriculture"] },
+ { ticker:"DBC", name:"Invesco DB Commodity ETF", tags:["ETF","Agriculture","Energy"] },
+ { ticker:"DE", name:"Deere & Co", tags:["Agriculture","Industrial"] },
+ { ticker:"ECL", name:"Ecolab Inc", tags:["Water","Industrial"] },
+ { ticker:"EPR", name:"EPR Properties", tags:["Experiential REIT"] },
+ { ticker:"EQR", name:"Equity Residential", tags:["Residential REIT"] },
+ { ticker:"ESS", name:"Essex Property Trust", tags:["Residential REIT"] },
+ { ticker:"ETH", name:"Ethereum", tags:["Crypto"] },
+ { ticker:"FCX", name:"Freeport-McMoRan", tags:["Copper","Mining & Metals"] },
+ { ticker:"FNV", name:"Franco-Nevada Corp", tags:["Precious Metals","Streaming & Royalty"] },
+ { ticker:"FPI", name:"Farmland Partners", tags:["Farmland"] },
+ { ticker:"FRT", name:"Federal Realty Trust", tags:["Net Lease"] },
+ { ticker:"GE", name:"GE Aerospace", tags:["Defense & Aerospace","Industrial"] },
+ { ticker:"GEV", name:"GE Vernova Inc", tags:["Energy Transition","Industrial"] },
+ { ticker:"GOOGL", name:"Alphabet Inc Cl A", tags:["Tech"] },
+ { ticker:"IAU", name:"iShares Gold Trust", tags:["ETF","Precious Metals"] },
+ { ticker:"IBM", name:"IBM Corp", tags:["Tech","Industrial"] },
+ { ticker:"IEF", name:"iShares 7-10Y Treasury ETF", tags:["ETF","Fixed Income"] },
+ { ticker:"IJR", name:"iShares Core S&P Small-Cap", tags:["ETF","Small Cap"] },
+ { ticker:"JPM", name:"JPMorgan Chase", tags:["Financials"] },
+ { ticker:"KIM", name:"Kimco Realty", tags:["Retail REIT"] },
+ { ticker:"KMI", name:"Kinder Morgan", tags:["Energy","Pipelines"] },
+ { ticker:"KRG", name:"Kite Realty Group", tags:["Retail REIT"] },
+ { ticker:"LEN", name:"Lennar Corp", tags:["Homebuilder"] },
+ { ticker:"LMT", name:"Lockheed Martin", tags:["Defense & Aerospace"] },
+ { ticker:"META", name:"Meta Platforms", tags:["Tech"] },
+ { ticker:"MSFT", name:"Microsoft Corp", tags:["Tech"] },
+ { ticker:"NEM", name:"Newmont Corp", tags:["Precious Metals","Mining & Metals"] },
+ { ticker:"NFLX", name:"Netflix Inc", tags:["Tech"] },
+ { ticker:"NNN", name:"NNN REIT Inc", tags:["Net Lease"] },
+ { ticker:"NTR", name:"Nutrien Ltd", tags:["Agriculture"] },
+ { ticker:"O", name:"Realty Income Corp", tags:["Net Lease"] },
+ { ticker:"OHI", name:"Omega Healthcare", tags:["Healthcare REIT"] },
+ { ticker:"OKE", name:"ONEOK Inc", tags:["Energy","Pipelines"] },
+ { ticker:"PFE", name:"Pfizer Inc", tags:["Healthcare"] },
+ { ticker:"PG", name:"Procter & Gamble", tags:["Consumer Staples"] },
+ { ticker:"QCOM", name:"Qualcomm Inc", tags:["Tech"] },
+ { ticker:"REXR", name:"Rexford Industrial", tags:["Industrial REIT"] },
+ { ticker:"RTX", name:"RTX Corp", tags:["Defense & Aerospace","Industrial"] },
+ { ticker:"SGOV", name:"iShares 0-3M Treasury Bond", tags:["ETF","Fixed Income"] },
+ { ticker:"SPG", name:"Simon Property Group", tags:["Retail REIT"] },
+ { ticker:"STAG", name:"STAG Industrial", tags:["Industrial REIT"] },
+ { ticker:"TGT", name:"Target Corp", tags:["Consumer Staples"] },
+ { ticker:"TFPM", name:"Triple Flag Precious Metals", tags:["Precious Metals","Streaming & Royalty"] },
+ { ticker:"TPL", name:"Texas Pacific Land", tags:["Land & Royalty","Energy"] },
+ { ticker:"TSLA", name:"Tesla Inc", tags:["Tech","Energy Transition"] },
+ { ticker:"UNM", name:"Unum Group", tags:["Financials","Insurance"] },
+ { ticker:"VBR", name:"Vanguard Small-Cap Value ETF",tags:["ETF","Small Cap"] },
+ { ticker:"VEA", name:"Vanguard FTSE Dev Markets", tags:["ETF","International"] },
+ { ticker:"VICI", name:"VICI Properties", tags:["Experiential REIT"] },
+ { ticker:"VT", name:"Vanguard Total World Stock", tags:["ETF","International"] },
+ { ticker:"VWO", name:"Vanguard FTSE EM ETF", tags:["ETF","International"] },
+ { ticker:"WPM", name:"Wheaton Precious Metals", tags:["Precious Metals","Streaming & Royalty"] },
+ { ticker:"XOM", name:"Exxon Mobil", tags:["Energy"] },
+ { ticker:"XYL", name:"Xylem Inc", tags:["Water","Industrial"] },
+];
+
+
+// ── CSV export ───────────────────────────────────────────────────────────────
+function exportCSV(stocks) {
+  const rows = [["Ticker","Name","Tags","Thesis","Entry Low","Entry High","Account"]];
+  stocks.forEach(s => {
+    const t = THESIS[s.ticker] || {};
+    rows.push([
+      s.ticker,
+      `"${s.name}"`,
+      `"${s.tags.join(", ")}"`,
+      `"${(t.thesis || "").replace(/"/g, "'")}"`,
+      getEn(_th) ? t.entry[0] : "",
+      getEn(_th) ? t.entry[1] : "",
+      t.acct ? ACCT[t.acct] : "",
+    ]);
   });
+  const csv = rows.map(r => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "portfolio-watchlist.csv"; a.click();
+  URL.revokeObjectURL(url);
 }
-window._buildIslandMarkers=buildIslandMarkers;
-buildIslandMarkers();
-function updateCrimeaStyle(){
-  if(!window._crimeaLayer)return;
-  const tag=state.tags.get("Ukraine");
-  const colors={been:"#059669",want:"#3b82f6",live:"#f59e0b",lived:"#f97316"};
-  if(tag){window._crimeaLayer.setStyle({fillColor:colors[tag],fillOpacity:darkMode?.6:.5,color:darkMode?{been:"#34d399",want:"#60a5fa",live:"#fbbf24",lived:"#fb923c"}[tag]:{been:"#047857",want:"#2563eb",live:"#d97706",lived:"#ea580c"}[tag],weight:1.5,dashArray:"4,4"})}
-  else{window._crimeaLayer.setStyle({fillColor:"#94a3b8",fillOpacity:.15,color:"rgba(100,116,139,0.4)",weight:1,dashArray:"4,4"})}
+
+
+// ── Row Sparkline ─────────────────────────────────────────────────────────────
+function Spark({ points, pct }) {
+  if (!points || points.length < 2) return <span style={{color:"#2e4560",fontSize:"9px"}}>—</span>;
+  const W = 80, H = 28;
+  const xs = points.map((_, i) => (i / (points.length - 1)) * W);
+  const ys = points.map(v => H - v * (H - 2) - 1);
+  const d  = xs.map((x, i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
+  const color = pct == null ? "#38bdf8" : pct >= 0 ? "#22c55e" : "#ef4444";
+  // Fill area under curve
+  const fill = d + ` L${W},${H} L0,${H} Z`;
+  return (
+    <svg width={W} height={H} style={{display:"block",overflow:"visible"}}>
+      <defs>
+        <linearGradient id={`sg${Math.round((pct||0)*10)}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={fill} fill={`url(#sg${Math.round((pct||0)*10)})`}/>
+      <path d={d} fill="none" stroke={color} strokeWidth="1.2"/>
+      <circle cx={xs[xs.length-1]} cy={ys[ys.length-1]} r="2" fill={color}/>
+    </svg>
+  );
 }
-}function updateMap(){updateCrimeaStyle&&updateCrimeaStyle();window._buildIslandMarkers&&window._buildIslandMarkers();geoLayer&&geoLayer.eachLayer(layer=>{const feature=layer.feature;if(feature){layer.setStyle(getCountryStyle(feature));const iso=NUM_TO_ISO[String(feature.id)],entry=iso?DATA.find(c=>c.iso===iso):null;if(entry){layer.unbindTooltip();const tag=state.tags.get(entry.n);layer.bindTooltip(`<b>${entry.n}</b><br/>${entry.cont}${tag?' · <span style="color:'+TAG_COLORS[tag]+'">'+TAG_ICONS[tag]+" "+TAG_LABELS[tag]+"</span>":""}`,{sticky:!0})}}})}window.addEventListener("DOMContentLoaded",()=>{darkMode&&(document.body.classList.add("dark"),document.getElementById("darkBtn").textContent="🌙"),loadFromURL(),viewingShared&&(document.getElementById("sharedBanner").style.display="block"),initMap(),render()})</script></body></html>
+
+// ── Main component ───────────────────────────────────────────────────────────
+export default function StockTracker() {
+  const [activeFilters, setActiveFilters] = useState(new Set());
+  const [openBuckets,   setOpenBuckets]   = useState(new Set(BUCKETS.map(b => b.id)));
+  const [search,        setSearch]        = useState("");
+  const [sortBy,        setSortBy]        = useState("ticker");
+  const [sortDir,       setSortDir]       = useState(1);
+  const [expandedRow,   setExpandedRow]   = useState(null);
+  const [priceData,     setPriceData]     = useState({});
+  const [yields,        setYields]        = useState({});
+  const [macro,         setMacro]         = useState({});
+  const [loading,       setLoading]       = useState(false);
+  const [progress,      setProgress]      = useState(0);
+  const [lastUpdated,   setLastUpdated]   = useState(null);
+
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap";
+    document.head.appendChild(link);
+  }, []);
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    setProgress(0);
+    // FRED fires independently — different API, no Finnhub rate impact
+    fetchYieldCurve().then(v => { if (v) setYields(v); }).catch(()=>{});
+    fetchMacroData().then(v  => { if (v) setMacro(v);  }).catch(()=>{});
+    // Finnhub: 1 call/ticker (candles only) = 83 calls total
+    // 60/min limit → BATCH=15 (15 calls/batch), DELAY=15s → ~6 batches ≈ 75s
+    const tickers = STOCKS.map(s => s.ticker);
+    const BATCH=12, DELAY=13000;
+    const all={};
+    for (let i=0; i<tickers.length; i+=BATCH) {
+      await Promise.allSettled(tickers.slice(i,i+BATCH).map(async t => {
+        try { const r=await fetchTicker(t); if (r) all[t]=r; } catch {}
+      }));
+      setPriceData({...all});
+      setProgress(Math.min(i+BATCH, tickers.length));
+      if (i+BATCH < tickers.length) await new Promise(r => setTimeout(r, DELAY));
+    }
+    // 5Y returns via Yahoo Finance (monthly, free, runs in parallel after main load)
+    Promise.allSettled(Object.keys(all).map(async t => {
+      const pct = await fetch5Y(t);
+      if (pct!=null) all[t] = {...all[t], fiveyPct:pct};
+    })).then(() => setPriceData({...all}));
+    setLastUpdated(new Date());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadAll();
+    const interval = setInterval(loadAll, 5 * 60 * 1000); // refresh every 5 min
+    return () => clearInterval(interval);
+  }, []);
+
+  const toggleFilter     = (tag) => setActiveFilters(prev => { const n = new Set(prev); n.has(tag) ? n.delete(tag) : n.add(tag); return n; });
+  const toggleBucketOpen = (id)  => setOpenBuckets(prev   => { const n = new Set(prev); n.has(id)  ? n.delete(id)  : n.add(id);  return n; });
+  const toggleRow        = (t)   => setExpandedRow(v => v === t ? null : t);
+
+  const getBucketState = (bucket) => {
+    const active = bucket.tags.filter(t => activeFilters.has(t));
+    if (active.length === 0) return "none";
+    if (active.length === bucket.tags.length) return "all";
+    return "partial";
+  };
+
+  const toggleBucketCheck = (bucket) => {
+    const state = getBucketState(bucket);
+    setActiveFilters(prev => {
+      const n = new Set(prev);
+      if (state === "all") bucket.tags.forEach(t => n.delete(t));
+      else                 bucket.tags.forEach(t => n.add(t));
+      return n;
+    });
+  };
+
+  const handleSort = (col) => {
+    if (sortBy === col) setSortDir(d => -d);
+    else { setSortBy(col); setSortDir(1); }
+  };
+
+  const filtered = useMemo(() => {
+    let list = STOCKS;
+    if (activeFilters.size > 0) list = list.filter(s => s.tags.some(t => activeFilters.has(t)));
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(s =>
+        s.ticker.toLowerCase().includes(q) ||
+        s.name.toLowerCase().includes(q) ||
+        s.tags.some(t => t.toLowerCase().includes(q))
+      );
+    }
+    return [...list].sort((a, b) => {
+      if (sortBy === "ticker") return sortDir * a.ticker.localeCompare(b.ticker);
+      if (sortBy === "name")   return sortDir * a.name.localeCompare(b.name);
+      return 0;
+    });
+  }, [activeFilters, search, sortBy, sortDir]);
+
+  const activeCount = activeFilters.size;
+
+  return (
+    <div style={{ background:S.bg, minHeight:"100vh", fontFamily:S.sans, color:S.txt, padding:"28px 32px" }}>
+
+      {/* ── Header ── */}
+      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", borderBottom:"1px solid #1e2d3d", paddingBottom:"18px", marginBottom:"24px" }}>
+        <div>
+          <h1 style={{ fontSize:"22px", fontWeight:700, color:S.acc, margin:0, letterSpacing:"0.08em", fontFamily:S.mono }}>
+            PORTFOLIO WATCHLIST
+          </h1>
+          <p style={{ fontSize:"11px", color:S.dim, margin:"5px 0 0" }}>All-Weather Tracker</p>
+        </div>
+        <div style={{ textAlign:"right" }}>
+          <span style={{ fontSize:"20px", fontWeight:700, color:"#94a3b8", display:"block", fontFamily:S.mono }}>{STOCKS.length}</span>
+          <span style={{ fontSize:"10px", color:S.dim, letterSpacing:"0.04em" }}>INSTRUMENTS</span>
+        </div>
+      </div>
+
+      {/* ── Macro Panel ── */}
+      <MacroPanel
+        yields={yields}
+        macro={macro}
+        loading={loading}
+        progress={progress}
+        lastUpdated={lastUpdated}
+        onRefresh={loadAll}
+      />
+
+      {/* ── Search + Actions ── */}
+      <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"20px", flexWrap:"wrap" }}>
+        <input
+          style={{ background:S.bg2, border:"1px solid #1e2d3d", color:S.txt, padding:"8px 14px", fontSize:"13px", fontFamily:S.sans, width:"280px", outline:"none" }}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search ticker, name, or tag…"
+        />
+
+        {/* Always-visible filter button */}
+        <button
+          onClick={() => setActiveFilters(new Set())}
+          style={{ background: activeCount > 0 ? "transparent" : S.bg2, border: `1px solid ${activeCount > 0 ? S.acc : S.bdr}`, color: activeCount > 0 ? S.acc : S.dim, padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.15s", }}
+        >
+          {activeCount > 0 ? `Clear ${activeCount} filter${activeCount > 1 ? "s" : ""}` : "Show All"}
+        </button>
+
+        {/* Export */}
+        <button
+          onClick={() => exportCSV(filtered)}
+          style={{ background:S.bg2, border:"1px solid #1e2d3d", color:"#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
+        >
+          Export CSV
+        </button>
+
+        <span style={{ fontSize:"12px", color:S.dim }}>
+          {filtered.length} of {STOCKS.length} shown
+        </span>
+      </div>
+
+      {/* ── Bucket Accordions ── */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(310px, 1fr))", gap:"6px", marginBottom:"28px" }}>
+        {BUCKETS.map(bucket => {
+          const isOpen     = openBuckets.has(bucket.id);
+          const state      = getBucketState(bucket);
+          const accentColor = TAG_COLORS[bucket.tags[0]] || S.dim;
+          const isActive   = state !== "none";
+
+          return (
+            <div key={bucket.id} style={{ background:S.bg1, border:`1px solid ${isActive ? accentColor+"60" : S.bdr2}`, transition:"border-color 0.2s" }}>
+
+              {/* Header row */}
+              <div style={{ display:"flex", alignItems:"center", padding:"9px 12px", gap:"9px" }}>
+
+                {/* Checkbox */}
+                <div
+                  onClick={() => toggleBucketCheck(bucket)}
+                  title="Select / deselect all tags"
+                  style={{ width:"15px", height:"15px", flexShrink:0, cursor:"pointer", border:`1.5px solid ${isActive ? accentColor : "#2a3d52"}`, background: state === "all" ? accentColor : state === "partial" ? accentColor+"33" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s", }}
+                >
+                  {state === "all" && <svg width="9" height="9" viewBox="0 0 9 9"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                  {state === "partial" && <div style={{ width:"7px", height:"1.5px", background:accentColor }} />}
+                </div>
+
+                {/* Label */}
+                <div onClick={() => toggleBucketOpen(bucket.id)} style={{ flex:1, display:"flex", alignItems:"center", gap:"7px", cursor:"pointer", userSelect:"none", minWidth:0 }}>
+                  <span style={{ fontSize:"14px", flexShrink:0 }}>{bucket.emoji}</span>
+                  <span style={{ fontSize:"12px", fontWeight:600, color: isActive ? "#dde6f0" : S.txt2, transition:"color 0.15s", whiteSpace:"nowrap" }}>
+                    {bucket.label}
+                  </span>
+                  {(() => {
+                    const sel = bucket.tags.filter(t => activeFilters.has(t)).length;
+                    const tot = bucket.tags.reduce((n,t) => n + STOCKS.filter(s=>s.tags.includes(t)).length, 0);
+                    const uniq = [...new Set(STOCKS.filter(s=>s.tags.some(t=>bucket.tags.includes(t))).map(s=>s.ticker))].length;
+                    return (
+                      <span style={{ fontSize:"10px", color: sel>0 ? S.acc : S.dim2, marginLeft:"auto", paddingLeft:"8px", flexShrink:0, fontFamily:S.mono }}>
+                        {sel>0 ? `${bucket.tags.filter(t=>activeFilters.has(t)).length} filter${sel>1?"s":""} · ` : ""}{uniq}
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                {/* Triangle */}
+                <div
+                  onClick={() => toggleBucketOpen(bucket.id)}
+                  style={{ cursor:"pointer", color: isOpen ? "#4a7090" : S.dim2, fontSize:"9px", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition:"transform 0.2s, color 0.15s", paddingLeft:"4px", flexShrink:0 }}
+                >▼</div>
+              </div>
+
+              {/* Sub-tags */}
+              {isOpen && (
+                <div style={{ padding:"2px 12px 10px 36px", display:"flex", flexWrap:"wrap", gap:"5px" }}>
+                  {bucket.tags.map(tag => {
+                    const active = activeFilters.has(tag);
+                    const color  = TAG_COLORS[tag] || "#6b7280";
+                    const count  = STOCKS.filter(s => s.tags.includes(tag)).length;
+                    return (
+                      <button
+                        key={tag}
+                        onClick={() => toggleFilter(tag)}
+                        style={{ background: active ? color : `${color}15`, border:`1px solid ${active ? color : color+"40"}`, color: active ? "#fff" : color, padding:"3px 9px", fontSize:"11px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.12s", whiteSpace:"nowrap", }}
+                      >
+                        {tag} <span style={{ opacity:0.5, fontSize:"9px", marginLeft:"3px" }}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Table ── */}
+      <table style={{ width:"100%", borderCollapse:"collapse", fontSize:"12px" }}>
+        <thead>
+          <tr>
+            {[["ticker","Ticker"],["name","Name"]].map(([col, label]) => (
+              <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid #1e2d3d", whiteSpace:"nowrap", fontFamily:S.sans, }}>
+                {label} {sortBy === col ? (sortDir === 1 ? "↑" : "↓") : ""}
+              </th>
+            ))}
+            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>Price</th>
+            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>1D %</th>
+            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>YTD %</th>
+            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>6M %</th>
+            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>1Y %</th>
+            <th style={{ textAlign:"right", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>5Y %</th>
+            <th style={{ textAlign:"left", padding:"6px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans, whiteSpace:"nowrap" }}>1Y Chart</th>
+            <th style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans }}>Tags</th>
+            <th style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color:S.dim, fontWeight:600, borderBottom:"1px solid #1e2d3d", fontFamily:S.sans }}>Ideal Account</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map((stock, i) => {
+            const _th = stock.ticker;
+            const isOpen  = expandedRow === stock.ticker;
+            const acctKey = getAc(_th);
+            const acctLabel = ACCT[acctKey];
+            const acctColor = ACCT_COLOR[acctKey];
+
+            return (
+              <>
+                <tr
+                  key={stock.ticker}
+                  onClick={() => toggleRow(stock.ticker)}
+                  style={{ borderBottom: isOpen ? "none" : "1px solid #0d1520", background: isOpen ? S.bg3 : i % 2 === 0 ? "transparent" : S.bg, cursor:"pointer", }}
+                  onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = S.bg3; }}
+                  onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = i % 2 === 0 ? "transparent" : S.bg; }}
+                >
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:S.acc, whiteSpace:"nowrap", fontSize:"13px", fontFamily:S.mono }}>
+                    <span style={{ marginRight:"6px", fontSize:"9px", color: isOpen ? S.acc : S.dim2, transition:"color 0.15s" }}>▶</span>
+                    {stock.ticker}
+                    {isInSeason(stock.tags, macro?.regime) && (
+                      <span title={`Favored in ${macro.regime}`} style={{ marginLeft:"5px", fontSize:"9px", color: REGIME_COLOR[macro.regime], verticalAlign:"middle", lineHeight:1 }}>★</span>
+                    )}
+                  </td>
+                  <td style={{ padding:"10px 14px", color:S.txt2, fontSize:"12px", fontFamily:S.sans, whiteSpace:"nowrap" }}>
+                    {stock.name}
+                  </td>
+                  {/* Price + return columns */}
+                  {["price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"].map(field => {
+                    const pd = priceData[stock.ticker];
+                    const val = pd?.[field];
+                    const isPrice = field === "price";
+                    return (
+                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.mono, fontSize:"12px", color: isPrice ? "#cbd5e1" : pctColor(val) }}>
+                        {pd === undefined ? <span style={{color:S.dim2,fontSize:"10px"}}>…</span>
+                          : val === null || val === undefined ? "—"
+                          : isPrice ? (val < 1 ? val.toFixed(4) : val < 100 ? val.toFixed(2) : val.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}))
+                          : pctFmt(val)
+                        }
+                      </td>
+                    );
+                  })}
+                  {/* 5Y sparkline */}
+                  <td style={{ padding:"4px 14px 4px 8px", verticalAlign:"middle" }}>
+                    <Spark points={priceData[stock.ticker]?.spark} pct={priceData[stock.ticker]?.fiveyPct} />
+                  </td>
+                  <td style={{ padding:"7px 14px" }}>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:"4px" }}>
+                      {stock.tags.map(tag => {
+                        const color  = TAG_COLORS[tag] || "#6b7280";
+                        const active = activeFilters.has(tag);
+                        return (
+                          <span
+                            key={tag}
+                            onClick={e => { e.stopPropagation(); toggleFilter(tag); }}
+                            style={{ background: active ? color : `${color}18`, border:`1px solid ${active ? color : color+"45"}`, color: active ? "#fff" : color, padding:"2px 7px", fontSize:"10px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.1s", whiteSpace:"nowrap", }}
+                          >{tag}</span>
+                        );
+                      })}
+                    </div>
+                  </td>
+                  <td style={{ padding:"7px 14px", whiteSpace:"nowrap" }}>
+                    <span style={{ background:`${acctColor}18`, border:`1px solid ${acctColor}45`, color:acctColor, padding:"2px 8px", fontSize:"10px", fontFamily:S.sans, }}>{acctLabel}</span>
+                  </td>
+                </tr>
+
+                {/* ── Drawer ── */}
+                {isOpen && (
+                  <tr key={`${stock.ticker}-drawer`}>
+                    <td colSpan={11} style={{ padding:"0", borderBottom:"1px solid #0d1520" }}>
+                      <div style={{ background:"#0a1520", borderLeft:"2px solid #38bdf8", margin:"0 0 0 44px", padding:"14px 20px 16px" }}>
+
+                        {/* Thesis */}
+                        {getTh(_th) ? (
+                          <p style={{ fontSize:"12px", color:"#94a3b8", margin:"0 0 12px", lineHeight:1.6, fontFamily:S.sans }}>
+                            <span style={{ color:S.dim, fontSize:"10px", fontWeight:600, letterSpacing:"0.06em", marginRight:"8px" }}>THESIS</span>
+                            {getTh(_th)}
+                          </p>
+                        ) : (
+                          <p style={{ fontSize:"12px", color:S.dim2, margin:"0 0 12px", fontStyle:"italic" }}>No thesis recorded yet.</p>
+                        )}
+
+                        {/* Entry zone */}
+                        <div style={{ display:"flex", alignItems:"center", gap:"20px", flexWrap:"wrap" }}>
+                          {getEn(_th) ? (
+                            <div>
+                              <span style={{ fontSize:"10px", color:S.dim, fontWeight:600, letterSpacing:"0.06em", display:"block", marginBottom:"4px" }}>TARGET ENTRY ZONE</span>
+                              <span style={{ fontSize:"15px", fontWeight:700, color:S.grn, fontFamily:S.mono }}>
+                                ${getEn(_th)[0].toLocaleString()} – ${getEn(_th)[1].toLocaleString()}
+                              </span>
+                            </div>
+                          ) : (
+                            <div>
+                              <span style={{ fontSize:"10px", color:S.dim, fontWeight:600, letterSpacing:"0.06em", display:"block", marginBottom:"4px" }}>TARGET ENTRY ZONE</span>
+                              <span style={{ fontSize:"12px", color:S.dim2, fontStyle:"italic" }}>Index / no specific entry target</span>
+                            </div>
+                          )}
+
+                          <div>
+                            <span style={{ fontSize:"10px", color:S.dim, fontWeight:600, letterSpacing:"0.06em", display:"block", marginBottom:"4px" }}>PREFERRED ACCOUNT</span>
+                            <span style={{ fontSize:"13px", fontWeight:600, color: ACCT_COLOR[acctKey], fontFamily:S.sans }}>
+                              {ACCT[acctKey]}
+                            </span>
+                          </div>
+                        </div>
+
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </>
+            );
+          })}
+          {filtered.length === 0 && (
+            <tr><td colSpan={11} style={{ padding:"32px", textAlign:"center", color:"#2a3d52", fontSize:"13px", fontFamily:S.sans }}>No instruments match current filters</td></tr>
+          )}
+        </tbody>
+      </table>
+
+      <div style={{ borderTop:"1px solid #1e2d3d", marginTop:"28px", paddingTop:"12px", fontSize:"10px", color:"#2a3d52", display:"flex", justifyContent:"space-between", fontFamily:S.sans }}>
+        <span>All-Weather Portfolio Tracker</span>
+        <span>{new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</span>
+      </div>
+    </div>
+  );
+}
