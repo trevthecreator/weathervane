@@ -8,7 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body, #root { width: 100%; min-height: 100vh; background: #080c12; }
+    html, body, #root { width: 100%; min-height: 100vh; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: #0b1118; }
     ::-webkit-scrollbar-thumb { background: #1e2d3d; border-radius: 4px; }
@@ -39,6 +39,8 @@ const LIGHT = {
   txt:"#0f172a", txt2:"#475569", acc:"#0284c7", grn:"#16a34a", red:"#dc2626",
 };
 var S = DARK;
+var RETURNS_COLS = ["dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"];
+var VAL_COLS = ["trailingPE","fwdPE","target","upside"];
 
 
 const FINNHUB_KEY = "d6jc641r01ql467j68s0d6jc641r01ql467j68sg"; // used for real-time WebSocket
@@ -113,15 +115,17 @@ async function fetchQuoteDataSingle(ticker) {
     var mUrl = "/api/proxy?url=" + encodeURIComponent(
       "https://finnhub.io/api/v1/stock/metric?symbol=" + sym + "&metric=all&token=" + FINNHUB_KEY
     );
+    var mResp = await fetch(mUrl);
+    var mData = await mResp.json();
+    var m = mData && mData.metric ? mData.metric : {};
+
     var tUrl = "/api/proxy?url=" + encodeURIComponent(
       "https://finnhub.io/api/v1/stock/price-target?symbol=" + sym + "&token=" + FINNHUB_KEY
     );
-    var results = await Promise.all([
-      fetch(mUrl).then(function(r) { return r.json(); }).catch(function() { return null; }),
-      fetch(tUrl).then(function(r) { return r.json(); }).catch(function() { return null; })
-    ]);
-    var m = results[0] && results[0].metric ? results[0].metric : {};
-    var t = results[1] || {};
+    var tResp = await fetch(tUrl);
+    var t = await tResp.json();
+    if (t && t.error) t = {};
+
     var pe = m.peBasicExclExtraTTM || m.peTTM || null;
     var fpe = m.peExclExtraAnnual || null;
     var dy = m.dividendYieldIndicatedAnnual || null;
@@ -136,14 +140,14 @@ async function fetchQuoteDataSingle(ticker) {
       targetMean:  t.targetMean || null,
       targetHigh:  t.targetHigh || null,
       targetLow:   t.targetLow || null,
-      analystCount: t.lastUpdated ? 1 : null,
+      analystCount:t.targetMean ? 1 : null,
     };
   } catch(e) { return null; }
 }
 
 async function fetchQuoteData(tickers, onProgress) {
   var results = {};
-  var BATCH = 5, DELAY = 6000;
+  var BATCH = 3, DELAY = 7000;
   for (var i = 0; i < tickers.length; i += BATCH) {
     await Promise.allSettled(tickers.slice(i, i + BATCH).map(function(t) {
       return fetchQuoteDataSingle(t).then(function(r) { if (r) results[t] = r; });
@@ -834,11 +838,15 @@ function StockTracker() {
   const [expandedRow,   setExpandedRow]   = useState(null);
   const [inSeasonOnly,  setInSeasonOnly]  = useState(false);
   const [visibleCols,   setVisibleCols]   = useState(new Set(["ticker","name","price","dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct","divYield","trailingPE","fwdPE","target","upside","spark","tags","acct"]));
+  const [returnsPref, setReturnsPref] = useState(new Set(["dailyPct","ytdPct","sixMoPct","oneyPct","fiveyPct"]));
+  const [valPref, setValPref] = useState(new Set(["trailingPE","fwdPE","target","upside"]));
+  const [returnsOn, setReturnsOn] = useState(true);
+  const [valOn, setValOn] = useState(true);
   const [showColPicker, setShowColPicker] = useState(false);
   const [realReturns,   setRealReturns]   = useState(false); // subtract CPI from returns
   const [corrData,      setCorrData]      = useState(null);
   const [quoteData,     setQuoteData]     = useState({});
-  const [darkMode,      setDarkMode]      = useState(true);
+  const [darkMode,      setDarkMode]      = useState(false);
   const [priceData,     setPriceData]     = useState({});
   const [yields,        setYields]        = useState({});
   const [macro,         setMacro]         = useState({});
@@ -1026,6 +1034,7 @@ function StockTracker() {
   };
 
   S = darkMode ? DARK : LIGHT;
+  if (typeof document !== "undefined") document.body.style.background = S.bg;
 
   const filtered = useMemo(() => {
     let list = STOCKS;
@@ -1086,7 +1095,7 @@ function StockTracker() {
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:"16px" }}>
           <div style={{ textAlign:"right" }}>
-            <span style={{ fontSize:"20px", fontWeight:700, color:"#94a3b8", display:"block", fontFamily:S.sans }}>{STOCKS.length}</span>
+            <span style={{ fontSize:"20px", fontWeight:700, color:S.txt2, display:"block", fontFamily:S.sans }}>{STOCKS.length}</span>
             <span style={{ fontSize:"10px", color:S.dim, letterSpacing:"0.04em" }}>INSTRUMENTS</span>
           </div>
           <button onClick={function(){setDarkMode(function(v){return !v})}} style={{background:S.bg2,border:"1px solid "+S.bdr,color:S.dim,padding:"6px 10px",fontSize:"14px",cursor:"pointer",lineHeight:1}} title={darkMode?"Light mode":"Dark mode"}>{darkMode?"\u2600":"\u263E"}</button>
@@ -1095,7 +1104,7 @@ function StockTracker() {
 
       {/* ── API Status Banner (auto-hides when both OK) ── */}
       {apiStatus && (apiStatus.yahoo !== "ok" || apiStatus.fred !== "ok") && (
-        <div style={{ background:"#1a0a0a", border:"1px solid #4a2020", padding:"12px 16px", marginBottom:"20px", fontSize:"11px", fontFamily:S.sans, lineHeight:1.8 }}>
+        <div style={{ background:darkMode?"#1a0a0a":"#fef2f2", border:"1px solid "+(darkMode?"#4a2020":"#fecaca"), padding:"12px 16px", marginBottom:"20px", fontSize:"11px", fontFamily:S.sans, lineHeight:1.8 }}>
           <div style={{ color:"#f87171", fontWeight:600, marginBottom:"6px", fontFamily:S.sans, fontSize:"12px" }}>API DIAGNOSTICS</div>
           <div style={{ color: apiStatus.yahoo === "ok" ? S.grn : apiStatus.yahoo?.startsWith("err") ? "#f87171" : S.dim }}>
             Yahoo Finance (historical): {apiStatus.yahoo}
@@ -1160,28 +1169,96 @@ function StockTracker() {
         <div style={{ position:"relative", display:"inline-block" }}>
           <button
             onClick={() => setShowColPicker(v => !v)}
-            style={{ background: showColPicker ? S.bg3 : S.bg2, border:"1px solid "+(showColPicker ? S.acc : S.bdr), color: showColPicker ? S.acc : "#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
+            style={{ background: showColPicker ? S.bg3 : S.bg2, border:"1px solid "+(showColPicker ? S.acc : S.bdr), color: showColPicker ? S.acc : S.dim, padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer" }}
           >
             Columns ▾
           </button>
           {showColPicker && (
-            <div style={{ position:"absolute", top:"100%", left:0, marginTop:"4px", background:S.bg2, border:`1px solid ${S.bdr}`, padding:"8px 0", zIndex:50, minWidth:"160px" }}>
-              {[["ticker","Ticker"],["name","Name"],["price","Price"],["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"],["divYield","Div Yield"],["trailingPE","P/E"],["fwdPE","Fwd P/E"],["target","Target"],["upside","Upside"],["spark","1Y Chart"],["tags","Tags"],["acct","Account"]].map(([k,label]) => (
-                <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"4px 14px", fontSize:"11px", color: visibleCols.has(k) ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
-                  onClick={() => setVisibleCols(prev => { const n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; })}
-                >
-                  <span style={{ width:14, height:14, border:`1px solid ${S.bdr}`, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"10px", background: visibleCols.has(k) ? S.acc+"22" : "transparent", color: visibleCols.has(k) ? S.acc : "transparent" }}>✓</span>
-                  {label}
-                </label>
-              ))}
+            <div style={{ position:"absolute", top:"100%", left:0, marginTop:"4px", background:S.bg1, border:"1px solid "+S.bdr, padding:"8px 0", zIndex:50, minWidth:"200px" }}>
+              <div style={{ padding:"4px 14px 2px", fontSize:"10px", fontWeight:700, color:S.dim, letterSpacing:"0.06em", fontFamily:S.sans }}>LAYOUT</div>
+              {[["ticker","Ticker"],["name","Name"],["price","Price"],["divYield","Div Yield"],["spark","1Y Chart"],["tags","Tags"],["acct","Account"]].map(function(arr) {
+                var k=arr[0], label=arr[1];
+                return (
+                  <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"4px 14px", fontSize:"11px", color: visibleCols.has(k) ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
+                    onClick={function() { setVisibleCols(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; }); }}
+                  >
+                    <span style={{ width:14, height:14, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"10px", background: visibleCols.has(k) ? S.acc+"22" : "transparent", color: visibleCols.has(k) ? S.acc : "transparent" }}>✓</span>
+                    {label}
+                  </label>
+                );
+              })}
+              <div style={{ borderTop:"1px solid "+S.bdr, margin:"6px 0 2px" }}></div>
+              <label style={{ display:"flex", alignItems:"center", gap:"8px", padding:"5px 14px", fontSize:"11px", fontWeight:700, color: returnsOn ? S.acc : S.dim, cursor:"pointer", fontFamily:S.sans }}
+                onClick={function() {
+                  if (returnsOn) { setReturnsOn(false); setVisibleCols(function(prev) { var n=new Set(prev); RETURNS_COLS.forEach(function(c){n.delete(c)}); return n; }); }
+                  else { setReturnsOn(true); setVisibleCols(function(prev) { var n=new Set(prev); returnsPref.forEach(function(c){n.add(c)}); return n; }); }
+                }}
+              >
+                <span style={{ width:14, height:14, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"10px", background: returnsOn ? S.acc+"22" : "transparent", color: returnsOn ? S.acc : "transparent" }}>✓</span>
+                {returnsOn ? "▶" : "▼"} Returns
+              </label>
+              {returnsOn && [["dailyPct","1D %"],["ytdPct","YTD %"],["sixMoPct","6M %"],["oneyPct","1Y %"],["fiveyPct","5Y %"]].map(function(arr) {
+                var k=arr[0], label=arr[1], isOn = returnsPref.has(k);
+                return (
+                  <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"3px 14px 3px 30px", fontSize:"11px", color: isOn ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
+                    onClick={function() {
+                      setReturnsPref(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
+                      setVisibleCols(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
+                    }}
+                  >
+                    <span style={{ width:13, height:13, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"9px", background: isOn ? S.acc+"22" : "transparent", color: isOn ? S.acc : "transparent" }}>✓</span>
+                    {label}
+                  </label>
+                );
+              })}
+              <div style={{ borderTop:"1px solid "+S.bdr, margin:"6px 0 2px" }}></div>
+              <label style={{ display:"flex", alignItems:"center", gap:"8px", padding:"5px 14px", fontSize:"11px", fontWeight:700, color: valOn ? S.acc : S.dim, cursor:"pointer", fontFamily:S.sans }}
+                onClick={function() {
+                  if (valOn) { setValOn(false); setVisibleCols(function(prev) { var n=new Set(prev); VAL_COLS.forEach(function(c){n.delete(c)}); return n; }); }
+                  else { setValOn(true); setVisibleCols(function(prev) { var n=new Set(prev); valPref.forEach(function(c){n.add(c)}); return n; }); }
+                }}
+              >
+                <span style={{ width:14, height:14, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"10px", background: valOn ? S.acc+"22" : "transparent", color: valOn ? S.acc : "transparent" }}>✓</span>
+                {valOn ? "▶" : "▼"} Valuation
+              </label>
+              {valOn && [["trailingPE","P/E"],["fwdPE","Fwd P/E"],["target","Target"],["upside","Upside"]].map(function(arr) {
+                var k=arr[0], label=arr[1], isOn = valPref.has(k);
+                return (
+                  <label key={k} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"3px 14px 3px 30px", fontSize:"11px", color: isOn ? S.txt : S.dim2, cursor:"pointer", fontFamily:S.sans }}
+                    onClick={function() {
+                      setValPref(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
+                      setVisibleCols(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; });
+                    }}
+                  >
+                    <span style={{ width:13, height:13, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"9px", background: isOn ? S.acc+"22" : "transparent", color: isOn ? S.acc : "transparent" }}>✓</span>
+                    {label}
+                  </label>
+                );
+              })}
             </div>
           )}
         </div>
 
+        {/* Group Toggle Buttons */}
+        {[
+          { label:"Returns", on:returnsOn, setOn:setReturnsOn, pref:returnsPref, cols:RETURNS_COLS },
+          { label:"Valuation", on:valOn, setOn:setValOn, pref:valPref, cols:VAL_COLS },
+        ].map(function(g) {
+          return (
+            <button key={g.label}
+              onClick={function() {
+                if (g.on) { g.setOn(false); setVisibleCols(function(prev) { var n=new Set(prev); g.cols.forEach(function(c){n.delete(c)}); return n; }); }
+                else { g.setOn(true); setVisibleCols(function(prev) { var n=new Set(prev); g.pref.forEach(function(c){n.add(c)}); return n; }); }
+              }}
+              style={{ background: g.on ? S.acc+"18" : S.bg2, border:"1px solid "+(g.on ? S.acc : S.bdr), color: g.on ? S.acc : S.dim, padding:"6px 12px", fontSize:"11px", fontFamily:S.sans, cursor:"pointer" }}
+            >{g.on ? "▶ " : "▼ "}{g.label}</button>
+          );
+        })}
+
         {/* Real Return Toggle */}
         <button
-          onClick={() => setRealReturns(v => !v)}
-          style={{ background: realReturns ? "#22c55e22" : S.bg2, border:"1px solid "+(realReturns ? S.grn : S.bdr), color: realReturns ? S.grn : "#64748b", padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.15s" }}
+          onClick={function() { setRealReturns(function(v) { return !v; }); }}
+          style={{ background: realReturns ? "#22c55e22" : S.bg2, border:"1px solid "+(realReturns ? S.grn : S.bdr), color: realReturns ? S.grn : S.dim, padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer", transition:"all 0.15s" }}
         >
           {realReturns ? "Real Returns (−CPI)" : "Nominal Returns"}
         </button>
@@ -1209,7 +1286,7 @@ function StockTracker() {
                 <div
                   onClick={() => toggleBucketCheck(bucket)}
                   title="Select / deselect all tags"
-                  style={{ width:"15px", height:"15px", flexShrink:0, cursor:"pointer", border:`1.5px solid ${isActive ? accentColor : "#2a3d52"}`, background: state === "all" ? accentColor : state === "partial" ? accentColor+"33" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s", }}
+                  style={{ width:"15px", height:"15px", flexShrink:0, cursor:"pointer", border:"1.5px solid "+(isActive ? accentColor : S.dim2), background: state === "all" ? accentColor : state === "partial" ? accentColor+"33" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s", }}
                 >
                   {state === "all" && <svg width="9" height="9" viewBox="0 0 9 9"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                   {state === "partial" && <div style={{ width:"7px", height:"1.5px", background:accentColor }} />}
@@ -1267,7 +1344,7 @@ function StockTracker() {
       {/* ── Table ── */}
       <table style={{ width:"100%", borderCollapse:"collapse", fontSize:"12px" }}>
         <thead>
-          <tr>
+          <tr style={{ background:S.bg1 }}>
             {[["ticker","Ticker"],["name","Name"]].filter(([k])=>visibleCols.has(k)).map(([col, label]) => (
               <th key={col} onClick={() => handleSort(col)} style={{ textAlign:"left", padding:"10px 14px", fontSize:"11px", color: sortBy === col ? S.acc : S.dim, fontWeight:600, cursor:"pointer", userSelect:"none", borderBottom:"1px solid "+S.bdr, whiteSpace:"nowrap", fontFamily:S.sans, }}>
                 {label} {sortBy === col ? (sortDir === 1 ? "↑" : "↓") : ""}
@@ -1298,9 +1375,9 @@ function StockTracker() {
                 <tr
                   key={stock.ticker}
                   onClick={() => toggleRow(stock.ticker)}
-                  style={{ borderBottom: isOpen ? "none" : "1px solid "+S.bg2, background: isOpen ? S.bg3 : i % 2 === 0 ? "transparent" : S.bg, cursor:"pointer", }}
+                  style={{ borderBottom: isOpen ? "none" : "1px solid "+S.bg2, background: isOpen ? S.bg3 : i % 2 === 0 ? S.bg1 : S.bg, cursor:"pointer", }}
                   onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = S.bg3; }}
-                  onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = i % 2 === 0 ? "transparent" : S.bg; }}
+                  onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = i % 2 === 0 ? S.bg1 : S.bg; }}
                 >
                   {visibleCols.has("ticker") && <td style={{ padding:"10px 14px", fontWeight:600, color:S.acc, whiteSpace:"nowrap", fontSize:"13px", fontFamily:S.sans }}>
                     <span style={{ marginRight:"6px", fontSize:"9px", color: isOpen ? S.acc : S.dim2, transition:"color 0.15s" }}>▶</span>
@@ -1344,7 +1421,7 @@ function StockTracker() {
                       val = val - (cpi * scale);
                     }
                     return (
-                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.sans, fontSize:"12px", color: isPrice ? S.txt : isDivYield ? (val>3?"#22c55e":val>1?"#94a3b8":"#4a6278") : isValCol ? (field==="upside" ? pctColor(val) : field==="target" ? "#94a3b8" : val!=null&&val<15 ? "#22c55e" : val!=null&&val<25 ? "#94a3b8" : "#f59e0b") : pctColor(val) }}>
+                      <td key={field} style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap", fontFamily:S.sans, fontSize:"12px", color: isPrice ? S.txt : isDivYield ? (val>3?S.grn:val>1?S.txt2:S.dim) : isValCol ? (field==="upside" ? pctColor(val) : field==="target" ? S.txt2 : val!=null&&val<15 ? S.grn : val!=null&&val<25 ? S.txt2 : "#f59e0b") : pctColor(val) }}>
                         {pd === undefined && !isDivYield && !isValCol ? <span style={{color:S.dim2,fontSize:"10px"}}>…</span>
                           : val === null || val === undefined ? "—"
                           : isDivYield ? val.toFixed(2)+"%"
@@ -1393,7 +1470,7 @@ function StockTracker() {
 
                         {/* Thesis */}
                         {getTh(_th) ? (
-                          <p style={{ fontSize:"12px", color:"#94a3b8", margin:"0 0 12px", lineHeight:1.6, fontFamily:S.sans }}>
+                          <p style={{ fontSize:"12px", color:S.txt2, margin:"0 0 12px", lineHeight:1.6, fontFamily:S.sans }}>
                             <span style={{ color:S.dim, fontSize:"10px", fontWeight:600, letterSpacing:"0.06em", marginRight:"8px" }}>THESIS</span>
                             {getTh(_th)}
                           </p>
@@ -1409,15 +1486,15 @@ function StockTracker() {
                             <div style={{ marginBottom:"12px" }}>
                               <span style={{ color:S.dim, fontSize:"10px", fontWeight:600, letterSpacing:"0.06em" }}>VALUATION</span>
                               <div style={{ display:"flex", gap:"20px", flexWrap:"wrap", marginTop:"6px" }}>
-                                {qd.trailingPE!=null && <div><span style={{fontSize:"9px",color:S.dim}}>Trailing P/E</span><div style={{fontSize:"14px",fontWeight:600,color:qd.trailingPE<15?"#22c55e":qd.trailingPE<25?"#94a3b8":"#f59e0b",fontFamily:S.sans}}>{qd.trailingPE.toFixed(1)}x</div></div>}
-                                {qd.forwardPE!=null && <div><span style={{fontSize:"9px",color:S.dim}}>Forward P/E</span><div style={{fontSize:"14px",fontWeight:600,color:qd.forwardPE<15?"#22c55e":qd.forwardPE<25?"#94a3b8":"#f59e0b",fontFamily:S.sans}}>{qd.forwardPE.toFixed(1)}x</div></div>}
+                                {qd.trailingPE!=null && <div><span style={{fontSize:"9px",color:S.dim}}>Trailing P/E</span><div style={{fontSize:"14px",fontWeight:600,color:qd.trailingPE<15?S.grn:qd.trailingPE<25?S.txt2:"#f59e0b",fontFamily:S.sans}}>{qd.trailingPE.toFixed(1)}x</div></div>}
+                                {qd.forwardPE!=null && <div><span style={{fontSize:"9px",color:S.dim}}>Forward P/E</span><div style={{fontSize:"14px",fontWeight:600,color:qd.forwardPE<15?S.grn:qd.forwardPE<25?S.txt2:"#f59e0b",fontFamily:S.sans}}>{qd.forwardPE.toFixed(1)}x</div></div>}
                                 {(qd.trailingPE&&qd.forwardPE) && <div><span style={{fontSize:"9px",color:S.dim}}>PE Compression</span><div style={{fontSize:"14px",fontWeight:600,color:qd.forwardPE<qd.trailingPE?"#22c55e":"#ef4444",fontFamily:S.sans}}>{((1-qd.forwardPE/qd.trailingPE)*100).toFixed(0)}%</div></div>}
-                                {qd.epsTTM!=null && <div><span style={{fontSize:"9px",color:S.dim}}>EPS (TTM)</span><div style={{fontSize:"14px",fontWeight:600,color:"#94a3b8",fontFamily:S.sans}}>${qd.epsTTM.toFixed(2)}</div></div>}
-                                {qd.epsFwd!=null && <div><span style={{fontSize:"9px",color:S.dim}}>EPS (Fwd)</span><div style={{fontSize:"14px",fontWeight:600,color:"#94a3b8",fontFamily:S.sans}}>${qd.epsFwd.toFixed(2)}</div></div>}
+                                {qd.epsTTM!=null && <div><span style={{fontSize:"9px",color:S.dim}}>EPS (TTM)</span><div style={{fontSize:"14px",fontWeight:600,color:S.txt2,fontFamily:S.sans}}>${qd.epsTTM.toFixed(2)}</div></div>}
+                                {qd.epsFwd!=null && <div><span style={{fontSize:"9px",color:S.dim}}>EPS (Fwd)</span><div style={{fontSize:"14px",fontWeight:600,color:S.txt2,fontFamily:S.sans}}>${qd.epsFwd.toFixed(2)}</div></div>}
                               </div>
                               {qd.targetMean!=null && (
                                 <div style={{ display:"flex", gap:"20px", flexWrap:"wrap", marginTop:"8px" }}>
-                                  <div><span style={{fontSize:"9px",color:S.dim}}>Analyst Target</span><div style={{fontSize:"14px",fontWeight:600,color:"#94a3b8",fontFamily:S.sans}}>${qd.targetMean.toFixed(0)}{qd.analystCount ? <span style={{fontSize:"9px",color:S.dim2,marginLeft:"4px"}}>({qd.analystCount} analysts)</span> : ""}</div></div>
+                                  <div><span style={{fontSize:"9px",color:S.dim}}>Analyst Target</span><div style={{fontSize:"14px",fontWeight:600,color:S.txt2,fontFamily:S.sans}}>${qd.targetMean.toFixed(0)}{qd.analystCount ? <span style={{fontSize:"9px",color:S.dim2,marginLeft:"4px"}}>({qd.analystCount} analysts)</span> : ""}</div></div>
                                   {qd.targetLow!=null && <div><span style={{fontSize:"9px",color:S.dim}}>Low / High</span><div style={{fontSize:"14px",fontWeight:600,color:S.dim,fontFamily:S.sans}}>${qd.targetLow.toFixed(0)} \u2013 ${qd.targetHigh.toFixed(0)}</div></div>}
                                 </div>
                               )}
