@@ -118,12 +118,15 @@ async function fetchQuoteDataSingle(ticker) {
     var mResp = await fetch(mUrl);
     var mData = await mResp.json();
     var m = mData && mData.metric ? mData.metric : {};
+    if (["AAPL","MSFT","NVDA"].indexOf(ticker)>=0) console.log("[FH] "+ticker+" metric keys:"+Object.keys(m).length+" pe:"+m.peBasicExclExtraTTM+" status:"+mResp.status);
 
     var tUrl = "/api/proxy?url=" + encodeURIComponent(
       "https://finnhub.io/api/v1/stock/price-target?symbol=" + sym + "&token=" + FINNHUB_KEY
     );
     var tResp = await fetch(tUrl);
-    var t = await tResp.json();
+    var tRaw = await tResp.text();
+    var t; try { t = JSON.parse(tRaw); } catch(e) { t = {}; }
+    if (["AAPL","MSFT","NVDA"].indexOf(ticker)>=0) console.log("[FH] "+ticker+" target raw:"+tRaw.substring(0,200)+" status:"+tResp.status);
     if (t && t.error) t = {};
 
     var pe = m.peBasicExclExtraTTM || m.peTTM || null;
@@ -283,11 +286,11 @@ function pctFmt(v)  { if(v==null) return "—"; return (v>=0?"+":"")+v.toFixed(2
 
 // ── YieldCurve component ───────────────────────────────────────────────────────
 function YieldCurve({ yields }) {
-  const NODES=[["3M",6],["1Y",20],["2Y",34],["3Y",48],["5Y",64],["7Y",82],["10Y",102],["30Y",130]];
+  const NODES=[["3M",8],["1Y",30],["2Y",52],["3Y",72],["5Y",96],["7Y",123],["10Y",153],["30Y",195]];
   const vals=NODES.map(([k])=>yields[k]?.cur).filter(v=>v!=null);
   const sans="'DM Sans','Segoe UI',sans-serif";
   if (vals.length<2) return <span style={{color:"#2e4560",fontSize:"11px"}}>Loading…</span>;
-  const H=44,W=140,pad=4;
+  const H=50,W=210,pad=4;
   const mn=Math.min(...vals)-0.05, mx=Math.max(...vals)+0.05;
   const toY=v=>H-((v-mn)/(mx-mn))*(H-pad*2)-pad;
   const pathD=NODES.map(([k,x],i)=>{ const v=yields[k]?.cur; if(v==null)return null; return `${i===0?"M":"L"}${x},${toY(v).toFixed(1)}`; }).filter(Boolean).join(" ");
@@ -1227,7 +1230,7 @@ function StockTracker() {
                           if (group.id==="valuation") { setValPref(function(prev) { var n=new Set(prev); n.has(k)?n.delete(k):n.add(k); return n; }); }
                         }}
                       >
-                        <span style={{ width:13, height:13, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"9px", background: isOn ? S.acc+"22" : "transparent", color: isOn ? S.acc : "transparent" }}>\u2713</span>
+                        <span style={{ width:13, height:13, border:"1px solid "+S.bdr, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"9px", background: isOn ? S.acc+"22" : "transparent", color: isOn ? S.acc : "transparent" }}>✓</span>
                         {label}
                       </label>
                     );
