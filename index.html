@@ -797,7 +797,7 @@ STOCKS.forEach(s => { FH_REVERSE[FH_SYM(s.ticker)] = s.ticker; });
 
 // ── CSV export ───────────────────────────────────────────────────────────────
 function exportCSV(stocks) {
-  const rows = [["Ticker","Name","Tags","Thesis","Entry Low","Entry High","Account"]];
+  const rows = [["Ticker","Name","Tags","Thesis","Account"]];
   stocks.forEach(s => {
     const t = THESIS[s.ticker] || {};
     rows.push([
@@ -805,8 +805,6 @@ function exportCSV(stocks) {
       `"${s.name}"`,
       `"${s.tags.join(", ")}"`,
       `"${(t.t || "").replace(/"/g, "'")}"`,
-      t.e ? t.e[0] : "",
-      t.e ? t.e[1] : "",
       t.a ? ACCT[t.a] : "",
     ]);
   });
