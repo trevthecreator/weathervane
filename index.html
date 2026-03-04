@@ -333,8 +333,8 @@ function YieldCurve({ yields }) {
           <div style={{fontSize:"9px",color:"#4a6278",letterSpacing:"0.06em",fontFamily:S.sans}}>CURVE SHAPE</div>
           <div style={{fontSize:"13px",fontWeight:700,color:shapeColor,fontFamily:S.sans}}>{shape}</div>
         </div>
-        {s2s10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>2s/10s: <span style={{color:s2s10<0?"#ef4444":"#94a3b8"}}>{s2s10>=0?"+":""}{s2s10.toFixed(2)}%</span></div>}
-        {s3m10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>3m/10y: <span style={{color:s3m10<0?"#ef4444":"#94a3b8"}}>{s3m10>=0?"+":""}{s3m10.toFixed(2)}%</span></div>}
+        {s2s10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>2Y/10Y: <span style={{color:s2s10<0?"#ef4444":"#94a3b8"}}>{s2s10>=0?"+":""}{s2s10.toFixed(2)}%</span></div>}
+        {s3m10!==null&&<div style={{fontSize:"10px",color:"#4a6278",fontFamily:S.sans}}>3M/10Y: <span style={{color:s3m10<0?"#ef4444":"#94a3b8"}}>{s3m10>=0?"+":""}{s3m10.toFixed(2)}%</span></div>}
 
       </div>
     </div>
@@ -368,13 +368,16 @@ function DalioRegime({ macro }) {
   const { regime, inflationRising, growthRising } = macro||{};
   const color=REGIME_COLOR[regime]||S.dim;
   const assets=REGIME_ASSETS[regime]||"";
-  const QUADS=[["Stagflation",0,0],["Reflation",0,1],["Deflation",1,0],["Goldilocks",1,1]];
+  const QUADS=[["Reflation",0,0],["Goldilocks",0,1],["Stagflation",1,0],["Deflation",1,1]];
   return (
     <div style={{ minWidth:"220px" }}>
       <div style={{ fontSize:"8px", color:S.dim, letterSpacing:"0.07em", marginBottom:"6px", fontFamily:S.sans }}>DALIO ECONOMIC MACHINE</div>
       <div style={{ display:"flex", gap:"12px", alignItems:"flex-start" }}>
         <div>
-          <div style={{ fontSize:"7px", color:S.dim2, textAlign:"center", marginBottom:"2px", fontFamily:S.sans, letterSpacing:"0.04em" }}>↑ INFLATION</div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"2px" }}>
+            <span style={{ fontSize:"7px", color:S.dim2, fontFamily:S.sans, letterSpacing:"0.04em" }}>Growth ↑</span>
+            <span style={{ fontSize:"7px", color:S.dim2, fontFamily:S.sans, letterSpacing:"0.04em" }}>↑ INFLATION</span>
+          </div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"2px", width:"108px" }}>
             {QUADS.map(([r])=>{
               const active=r===regime; const qc=REGIME_COLOR[r]||S.dim2;
@@ -386,8 +389,8 @@ function DalioRegime({ macro }) {
             })}
           </div>
           <div style={{ display:"flex", justifyContent:"space-between", marginTop:"2px", borderTop:`1px solid ${S.bdr2}`, paddingTop:"1px" }}>
-            <span style={{ fontSize:"7px", color:S.dim2, fontFamily:S.sans }}>↓ Growth</span>
-            <span style={{ fontSize:"7px", color:S.dim2, fontFamily:S.sans }}>Growth ↑</span>
+            <span style={{ fontSize:"7px", color:S.dim2, fontFamily:S.sans }}>Growth ↓</span>
+            <span style={{ fontSize:"7px", color:S.dim2, fontFamily:S.sans }}></span>
           </div>
         </div>
         <div style={{ paddingTop:"2px" }}>
@@ -505,9 +508,9 @@ function MacroPanel({ yields, macro, loading, progress, lastUpdated, onRefresh }
           color={leiColor}
         />
         <MacroTile
-          label="INDL PRODUCTION YOY"
+          label="INDUSTRIAL PRODUCTION"
           value={m.growthRising!=null ? (m.growthRising?"Rising ↑":"Falling ↓") : null}
-          sub="INDPRO 3mo trend"
+          sub="INDPRO 3-month trend"
           color={m.growthRising===true ? S.grn : m.growthRising===false ? S.red : S.dim}
         />
       </div>
@@ -1178,6 +1181,14 @@ function StockTracker() {
         >
           Export CSV
         </button>
+        <a
+          href="/weathervane-guide.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ background:S.bg2, border:"1px solid "+S.bdr, color:S.dim, padding:"8px 14px", fontSize:"12px", fontFamily:S.sans, cursor:"pointer", textDecoration:"none", display:"inline-block" }}
+        >
+          Download Guide (PDF)
+        </a>
 
         {/* Column Group Dropdowns */}
         {[
